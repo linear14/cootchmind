@@ -7,3 +7,4 @@
 ### 학습
 
 - [요소의 절대좌표 상대좌표 구하기 (getBoundingClientRect, offsetAPI, pageOffset)](https://mommoo.tistory.com/85)
+- [반응형 레이아웃 너비를 나누는 기준](https://blogpack.tistory.com/823)
