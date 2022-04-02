@@ -2,7 +2,8 @@ import styled from 'styled-components';
 import Player from './Player';
 
 const Container = styled.div`
-  width: 480px;
+  flex: 1;
+  background: transparent;
   // border: 1px solid black;
 
   display: flex;

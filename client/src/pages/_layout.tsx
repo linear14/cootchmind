@@ -4,9 +4,9 @@ import styled from 'styled-components';
 
 const InnerContainer = styled.div`
   position: relative;
-  width: calc(90vh * 1.28);
-  min-width: calc(660px * 1.28);
-  max-width: calc(870px * 1.28);
+  width: calc(90vh * 1.35);
+  min-width: calc(660px * 1.35);
+  max-width: calc(870px * 1.35);
   height: 90vh;
   min-height: 660px;
   max-height: 870px;
