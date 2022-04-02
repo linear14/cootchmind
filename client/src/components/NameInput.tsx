@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 const Container = styled.div`
@@ -14,7 +15,7 @@ const Input = styled.input`
   line-height: 36px;
 `;
 
-const StartButton = styled.button`
+const StartButton = styled(Link)`
   height: 32px;
   font-size: 16px;
 
@@ -27,7 +28,7 @@ const NameInput = () => {
   return (
     <Container>
       <Input type='text' placeholder='게임에서 사용할 닉네임을 입력해주세요' />
-      <StartButton />
+      <StartButton to='/game-list' />
     </Container>
   );
 };
