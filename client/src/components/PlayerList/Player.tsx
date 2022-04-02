@@ -2,7 +2,7 @@ import styled from 'styled-components';
 
 const Container = styled.div`
   width: 100%;
-  height: calc(66% / 3);
+  height: calc(50% / 3);
   border: 1px solid black;
 `;
 

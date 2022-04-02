@@ -3,7 +3,7 @@ import ColorList from './ColorList';
 import EraseAllButton from './EraseAllButton';
 
 const Container = styled.div`
-  margin-top: 2rem;
+  margin-top: 1rem;
   display: flex;
   gap: 1rem;
 `;

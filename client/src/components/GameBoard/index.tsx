@@ -32,12 +32,10 @@ const GameBoard = () => {
 
   return (
     <Container ref={board}>
+      <Timer />
       <SketchBook canvasWidth={canvasWidth} />
       <Palette />
-      <Flex>
-        <Timer />
-        <AnswerInput />
-      </Flex>
+      <AnswerInput />
     </Container>
   );
 };

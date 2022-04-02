@@ -9,10 +9,10 @@ const Container = styled.div`
 const Row = styled.div`
   display: flex;
   justify-content: center;
-  gap: 16px;
+  gap: 1rem;
 
   & + & {
-    margin-top: 16px;
+    margin-top: 1rem;
   }
 `;
 

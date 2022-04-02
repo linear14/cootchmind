@@ -6,6 +6,7 @@ interface SketchBookProps {
 }
 
 const Canvas = styled.canvas`
+  margin-top: 1rem;
   border: 1px solid black;
 `;
 
