@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import NameInput from 'components/NameInput';
+import PlayerNameInput from 'components/PlayerNameInput';
 
 const Container = styled.div`
   width: 100%;
@@ -12,7 +12,7 @@ const Container = styled.div`
 const LoginPage = () => {
   return (
     <Container>
-      <NameInput />
+      <PlayerNameInput />
     </Container>
   );
 };
