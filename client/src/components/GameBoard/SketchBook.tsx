@@ -8,55 +8,15 @@ interface SketchBookProps {
 const Canvas = styled.canvas`
   margin-top: 1rem;
   border: 1px solid black;
+  background: white;
+  cursor: crosshair;
 `;
 
 const SketchBook = ({ canvasWidth }: SketchBookProps) => {
   const [isDrawing, setDrawing] = useState<boolean>(false);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
-
-  const drawStart = useCallback(({ nativeEvent }: MouseEvent) => {
-    const context = contextRef.current;
-    if (!context) {
-      initCanvasContext();
-      return;
-    }
-
-    const { offsetX, offsetY } = nativeEvent;
-    context.beginPath();
-    context.moveTo(offsetX * 2, offsetY * 2);
-    setDrawing(() => true);
-  }, []);
-
-  const draw = useCallback(
-    ({ nativeEvent }: MouseEvent) => {
-      if (!isDrawing) {
-        return;
-      }
-
-      const context = contextRef.current;
-      if (!context) {
-        initCanvasContext();
-        return;
-      }
-
-      const { offsetX, offsetY } = nativeEvent;
-      context.lineTo(offsetX * 2, offsetY * 2);
-      context.stroke();
-    },
-    [isDrawing]
-  );
-
-  const drawEnd = useCallback(() => {
-    const context = contextRef.current;
-    if (!context) {
-      initCanvasContext();
-      return;
-    }
-
-    context.closePath();
-    setDrawing(() => false);
-  }, []);
 
   const initCanvas = useCallback(
     (canvas: HTMLCanvasElement | null) => {
@@ -90,6 +50,54 @@ const SketchBook = ({ canvasWidth }: SketchBookProps) => {
     }
   }, []);
 
+  const drawStart = useCallback(
+    (e: MouseEvent) => {
+      e.preventDefault();
+
+      const context = contextRef.current;
+      if (!context) {
+        initCanvasContext();
+        return;
+      }
+
+      const { offsetX, offsetY } = e.nativeEvent;
+      context.beginPath();
+      context.moveTo(offsetX * 2, offsetY * 2);
+      setDrawing(true);
+    },
+    [initCanvasContext]
+  );
+
+  const draw = useCallback(
+    ({ nativeEvent }: MouseEvent) => {
+      if (!isDrawing) {
+        return;
+      }
+
+      const context = contextRef.current;
+      if (!context) {
+        initCanvasContext();
+        return;
+      }
+
+      const { offsetX, offsetY } = nativeEvent;
+      context.lineTo(offsetX * 2, offsetY * 2);
+      context.stroke();
+    },
+    [isDrawing, initCanvasContext]
+  );
+
+  const drawEnd = useCallback(() => {
+    const context = contextRef.current;
+    if (!context) {
+      initCanvasContext();
+      return;
+    }
+
+    context.closePath();
+    setDrawing(false);
+  }, [initCanvasContext]);
+
   useEffect(() => {
     if (canvasWidth) {
       const canvas = canvasRef.current;
@@ -101,7 +109,15 @@ const SketchBook = ({ canvasWidth }: SketchBookProps) => {
   }, [canvasWidth]);
 
   if (!canvasWidth) return null;
-  return <Canvas ref={canvasRef} onMouseDown={drawStart} onMouseMove={draw} onMouseUp={drawEnd} />;
+  return (
+    <Canvas
+      ref={canvasRef}
+      onMouseDown={drawStart}
+      onMouseMove={draw}
+      onMouseUp={drawEnd}
+      onMouseLeave={drawEnd}
+    />
+  );
 };
 
 export default SketchBook;

@@ -11,12 +11,6 @@ const Container = styled.div`
   border: 1px solid black;
 `;
 
-const Flex = styled.div`
-  margin-top: 4rem;
-  display: flex;
-  justify-content: space-between;
-`;
-
 const GameBoard = () => {
   const [canvasWidth, setCanvasWidth] = useState<number>();
   const board = useRef<HTMLDivElement>(null);
