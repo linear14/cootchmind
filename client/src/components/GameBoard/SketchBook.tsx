@@ -24,8 +24,8 @@ const SketchBook = ({ canvasWidth }: SketchBookProps) => {
         return;
       }
       // casvas의 실제 너비를 몇 칸으로 쪼갤건지 (많이 쪼갤수록 세밀한 작업이 가능할 것 같음)
-      canvas.width = canvasWidth * 2;
-      canvas.height = canvasWidth * 0.7 * 2;
+      canvas.width = 2000;
+      canvas.height = 1400;
 
       // canvas의 실제 너비 / 높이
       canvas.style.width = `${canvasWidth}px`;
@@ -60,12 +60,16 @@ const SketchBook = ({ canvasWidth }: SketchBookProps) => {
         return;
       }
 
-      const { offsetX, offsetY } = e.nativeEvent;
-      context.beginPath();
-      context.moveTo(offsetX * 2, offsetY * 2);
-      setDrawing(true);
+      if (canvasWidth) {
+        const { offsetX, offsetY } = e.nativeEvent;
+        const ratio = 2000 / canvasWidth;
+
+        context.beginPath();
+        context.moveTo(offsetX * ratio, offsetY * ratio);
+        setDrawing(true);
+      }
     },
-    [initCanvasContext]
+    [initCanvasContext, canvasWidth]
   );
 
   const draw = useCallback(
@@ -80,11 +84,15 @@ const SketchBook = ({ canvasWidth }: SketchBookProps) => {
         return;
       }
 
-      const { offsetX, offsetY } = nativeEvent;
-      context.lineTo(offsetX * 2, offsetY * 2);
-      context.stroke();
+      if (canvasWidth) {
+        const { offsetX, offsetY } = nativeEvent;
+        const ratio = 2000 / canvasWidth;
+
+        context.lineTo(offsetX * ratio, offsetY * ratio);
+        context.stroke();
+      }
     },
-    [isDrawing, initCanvasContext]
+    [isDrawing, initCanvasContext, canvasWidth]
   );
 
   const drawEnd = useCallback(() => {
