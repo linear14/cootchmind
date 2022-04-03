@@ -36,7 +36,7 @@ const PlayerNameInput = () => {
       return;
     }
     localStorage.setItem('player-name', playerName);
-    navigate('/game-list', { replace: true });
+    navigate('/', { replace: true });
   };
 
   return (

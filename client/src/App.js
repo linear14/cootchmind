@@ -12,9 +12,9 @@ function App() {
       <GlobalStyle />
       <Layout>
         <Routes>
-          <Route path='/' element={<LoginPage />} />
+          <Route path='/' element={<RoomListPage />} />
+          <Route path='/login' element={<LoginPage />} />
           <Route path='/game' element={<GamePage />} />
-          <Route path='/game-list' element={<RoomListPage />} />
           <Route path='*' element={<div>Not Found</div>} />
         </Routes>
       </Layout>
