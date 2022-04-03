@@ -1,9 +1,11 @@
+import styled from 'styled-components';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import CreateRoomBtn from 'components/Buttons/CreateRoomBtn';
 import RoomRefreshBtn from 'components/Buttons/RoomRefreshBtn';
-import RoutePrevBtn from 'components/Buttons/RoutePrevBtn';
 import ChatList from 'components/ChatList';
 import RoomList from 'components/RoomList';
-import styled from 'styled-components';
 
 const Container = styled.div`
   width: 100%;
@@ -23,12 +25,26 @@ const Body = styled.div`
 `;
 
 const RoomListPage = () => {
+  const [playerName, setPlayerName] = useState<string>();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const playerName = localStorage.getItem('player-name');
+    if (!playerName) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    setPlayerName(playerName);
+  }, [navigate]);
+
+  if (!playerName) return null;
+
   return (
     <Container>
       <Header>
-        <RoutePrevBtn />
         <CreateRoomBtn />
         <RoomRefreshBtn />
+        <div>현재 사용자: {playerName}</div>
       </Header>
       <Body>
         <ChatList />

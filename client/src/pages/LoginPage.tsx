@@ -1,4 +1,7 @@
 import styled from 'styled-components';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import PlayerNameInput from 'components/PlayerNameInput';
 
 const Container = styled.div`
@@ -10,6 +13,20 @@ const Container = styled.div`
 `;
 
 const LoginPage = () => {
+  const [isLoading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const playerName = localStorage.getItem('player-name');
+    if (playerName) {
+      navigate('/', { replace: true });
+      return;
+    }
+    setLoading(false);
+  }, [navigate]);
+
+  if (isLoading) return null;
+
   return (
     <Container>
       <PlayerNameInput />
