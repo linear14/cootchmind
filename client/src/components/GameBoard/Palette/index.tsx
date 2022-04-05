@@ -27,6 +27,17 @@ interface PaletteProps {
 }
 
 const Palette = ({ canvasRef }: PaletteProps) => {
+  const setColor = useCallback(
+    (colorHex: string) => {
+      const canvas = canvasRef.current;
+      const context = canvas?.getContext('2d');
+
+      if (canvas && context) {
+        context.strokeStyle = colorHex;
+      }
+    },
+    [canvasRef]
+  );
 
   const eraseAll = useCallback(() => {
     const canvas = canvasRef.current;
@@ -39,7 +50,7 @@ const Palette = ({ canvasRef }: PaletteProps) => {
 
   return (
     <Container>
-      <ColorList />
+      <ColorList onClickItem={setColor} />
       <EraseAllButton onClick={eraseAll} />
     </Container>
   );
