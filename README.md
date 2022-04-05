@@ -12,6 +12,9 @@
 
 - [요소의 절대좌표 상대좌표 구하기 (getBoundingClientRect, offsetAPI, pageOffset)](https://mommoo.tistory.com/85)
 - [반응형 레이아웃 너비를 나누는 기준](https://blogpack.tistory.com/823)
+- [forward ref](https://ko.reactjs.org/docs/forwarding-refs.html)
+- [tsconfig 옵션](https://geonlee.tistory.com/214)
+- [Socket.io-client 문서](https://socket.io/docs/v4/client-installation/)
 
 ### 이슈 해결에 도움 준 문서
 

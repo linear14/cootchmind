@@ -1,5 +1,6 @@
 import { GlobalStyle } from 'styles/global-style';
 import { Route, Routes } from 'react-router-dom';
+import { io } from 'socket.io-client';
 
 import Layout from 'pages/_layout';
 import GamePage from 'pages/GamePage';
@@ -7,6 +8,8 @@ import LoginPage from 'pages/LoginPage';
 import RoomListPage from 'pages/RoomListPage';
 
 function App() {
+  const socket = io('http://localhost:4000');
+
   return (
     <>
       <GlobalStyle />
