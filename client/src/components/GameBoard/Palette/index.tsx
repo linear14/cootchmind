@@ -1,4 +1,6 @@
+import { useCallback } from 'react';
 import styled from 'styled-components';
+
 import ColorList from './ColorList';
 import EraseAllButton from './EraseAllButton';
 
@@ -8,11 +10,16 @@ const Container = styled.div`
   gap: 1rem;
 `;
 
-const Palette = () => {
+
+interface PaletteProps {
+  canvasRef: React.RefObject<HTMLCanvasElement>;
+}
+
+const Palette = ({ canvasRef }: PaletteProps) => {
   return (
     <Container>
       <ColorList />
-      <EraseAllButton />
+      <EraseAllButton onClick={eraseAll} />
     </Container>
   );
 };

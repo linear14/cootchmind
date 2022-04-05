@@ -13,11 +13,12 @@ const Container = styled.div`
 
 const GameBoard = () => {
   const [canvasWidth, setCanvasWidth] = useState<number>();
-  const board = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setCanvasWidth(board.current?.offsetWidth);
-    window.onresize = () => setCanvasWidth(board.current?.offsetWidth);
+    setCanvasWidth(boardRef.current?.offsetWidth);
+    window.onresize = () => setCanvasWidth(boardRef.current?.offsetWidth);
 
     return () => {
       window.onresize = null;
@@ -25,10 +26,10 @@ const GameBoard = () => {
   }, []);
 
   return (
-    <Container ref={board}>
+    <Container ref={boardRef}>
       <Timer />
-      <SketchBook canvasWidth={canvasWidth} />
-      <Palette />
+      <SketchBook canvasWidth={canvasWidth} ref={canvasRef} />
+      <Palette canvasRef={canvasRef} />
       <AnswerInput />
     </Container>
   );
