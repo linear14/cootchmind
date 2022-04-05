@@ -64,12 +64,16 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
         }
 
         if (canvasWidth) {
-          const { offsetX, offsetY } = e.nativeEvent;
+          const { nativeEvent, button } = e;
+          const { offsetX, offsetY } = nativeEvent;
           const ratio = 2000 / canvasWidth;
 
-          context.beginPath();
-          context.moveTo(offsetX * ratio, offsetY * ratio);
-          setDrawing(true);
+          if (button < 3) {
+            context.lineWidth = button === 0 ? 10 : button === 1 ? 30 : 60;
+            context.beginPath();
+            context.moveTo(offsetX * ratio, offsetY * ratio);
+            setDrawing(true);
+          }
         }
       },
       [initCanvasContext, canvasWidth]
@@ -124,6 +128,7 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
       <Canvas
         ref={canvasRef}
         onMouseDown={drawStart}
+        onContextMenu={(e) => e.preventDefault()}
         onMouseMove={draw}
         onMouseUp={drawEnd}
         onMouseLeave={drawEnd}
