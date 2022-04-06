@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { SocketContext } from 'context/socket';
@@ -23,23 +23,32 @@ const ChatForm = styled.form`
 `;
 
 const ChatRegion = () => {
-  const [chatListItem, setChatListItems] = useState<Chat[]>([
-    { from: '동현', message: '안녕' },
-    { from: '동현', message: '안녕1' },
-    { from: '동현', message: '안녕2' }
-  ]);
+  const [chatListItem, setChatListItems] = useState<Chat[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const socket = useContext(SocketContext);
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const playerName = localStorage.getItem('player-name');
     const message = inputRef.current?.value;
-    if (message) {
-      console.log(message);
+
+    if (playerName && message) {
+      const newChat = { from: playerName, message };
+      socket.emit('onChat', newChat);
       inputRef.current.value = '';
     }
   };
+
+  useEffect(() => {
+    socket.on('onChatReceived', (chat: Chat) => {
+      setChatListItems((prev) => prev.concat(chat));
+    });
+
+    return () => {
+      socket.off('onChatReceived');
+    };
+  }, [socket]);
 
   return (
     <Container>

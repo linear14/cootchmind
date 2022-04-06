@@ -6,7 +6,6 @@ import ChatItem from './ChatItem';
 const Container = styled.div`
   width: 100%;
   flex: 1;
-  overflow-y: auto;
 `;
 
 interface ChatListProps {

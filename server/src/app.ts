@@ -17,14 +17,8 @@ io.on('connection', (socket) => {
     console.log(`bye user (${socket.id})`);
   });
 
-  socket.on('string', (args) => {
-    console.log(args);
-    socket.emit('alert', 'Server Received Message Successfully');
-  });
-
-  socket.on('object', (args) => {
-    console.log(args);
-    io.emit('alert', 'Object Message To All User Connected');
+  socket.on('onChat', (chat) => {
+    io.emit('onChatReceived', chat);
   });
 });
 
