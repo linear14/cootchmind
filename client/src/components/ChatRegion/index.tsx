@@ -42,7 +42,14 @@ const ChatRegion = () => {
 
   useEffect(() => {
     socket.on('onChatReceived', (chat: Chat) => {
-      setChatListItems((prev) => prev.concat(chat));
+      setChatListItems((prev) => {
+        const MAX_LIST_LENGTH = 100;
+        const newListLength = prev.length + 1;
+
+        return prev
+          .concat(chat)
+          .slice(newListLength > MAX_LIST_LENGTH ? newListLength - MAX_LIST_LENGTH : 0);
+      });
     });
 
     return () => {

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 import { Chat } from 'types/chat';
@@ -14,11 +15,19 @@ interface ChatListProps {
 }
 
 const ChatList = ({ items }: ChatListProps) => {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // scroll to bottom
+    bottomRef.current?.scrollIntoView();
+  }, [items]);
+
   return (
     <Container>
-      {items.map((item) => (
-        <ChatItem item={item} />
+      {items.map((item, idx) => (
+        <ChatItem key={idx} item={item} />
       ))}
+      <div ref={bottomRef}></div>
     </Container>
   );
 };
