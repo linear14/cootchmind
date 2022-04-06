@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { SocketContext } from 'context/socket';
-import ChatList from 'components/ChatList';
+import ChatRegion from 'components/ChatRegion';
 import RoomList from 'components/RoomList';
 
 const Container = styled.div`
@@ -95,7 +95,7 @@ const RoomListPage = () => {
         <div>현재 사용자: {playerName}</div>
       </Header>
       <Body>
-        <ChatList />
+        <ChatRegion />
         <RoomList />
       </Body>
     </Container>
