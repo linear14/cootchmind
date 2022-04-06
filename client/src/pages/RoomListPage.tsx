@@ -1,7 +1,8 @@
 import styled from 'styled-components';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { SocketContext } from 'context/socket';
 import ChatList from 'components/ChatList';
 import RoomList from 'components/RoomList';
 
@@ -53,6 +54,18 @@ const RoomRefreshBtn = styled.div`
 const RoomListPage = () => {
   const [playerName, setPlayerName] = useState<string>();
   const navigate = useNavigate();
+  const socket = useContext(SocketContext);
+
+  const socketString = () => {
+    socket.emit('string', '이동현');
+  };
+
+  const socketObject = () => {
+    socket.emit('object', {
+      name: '동현',
+      age: 28
+    });
+  };
 
   useEffect(() => {
     const playerName = localStorage.getItem('player-name');
@@ -63,13 +76,22 @@ const RoomListPage = () => {
     setPlayerName(playerName);
   }, [navigate]);
 
+  useEffect(() => {
+    socket.on('alert', (message) => {
+      alert(message);
+    });
+    return () => {
+      socket.off('alert');
+    };
+  }, [socket]);
+
   if (!playerName) return null;
 
   return (
     <Container>
       <Header>
-        <CreateRoomBtn />
-        <RoomRefreshBtn />
+        <CreateRoomBtn onClick={socketString} />
+        <RoomRefreshBtn onClick={socketObject} />
         <div>현재 사용자: {playerName}</div>
       </Header>
       <Body>
