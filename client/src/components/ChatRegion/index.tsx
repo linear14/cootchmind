@@ -23,7 +23,11 @@ const ChatForm = styled.form`
 `;
 
 const ChatRegion = () => {
-  const [chatListItem, setChatListItems] = useState<Chat[]>([]);
+  const [chatListItem, setChatListItems] = useState<Chat[]>([
+    { from: '동현', message: '안녕' },
+    { from: '동현', message: '안녕1' },
+    { from: '동현', message: '안녕2' }
+  ]);
   const inputRef = useRef<HTMLInputElement>(null);
   const socket = useContext(SocketContext);
 
