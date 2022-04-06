@@ -2,8 +2,6 @@ import styled from 'styled-components';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import CreateRoomBtn from 'components/Buttons/CreateRoomBtn';
-import RoomRefreshBtn from 'components/Buttons/RoomRefreshBtn';
 import ChatList from 'components/ChatList';
 import RoomList from 'components/RoomList';
 
@@ -22,6 +20,34 @@ const Header = styled.div`
 const Body = styled.div`
   flex: 1;
   display: flex;
+`;
+
+const CreateRoomBtn = styled.div`
+  width: 240px;
+  height: 60px;
+  font-size: 24px;
+  line-height: 60px;
+  text-align: center;
+
+  border: 1px solid black;
+
+  &::after {
+    content: '방만들기';
+  }
+`;
+
+const RoomRefreshBtn = styled.div`
+  width: 240px;
+  height: 60px;
+  font-size: 24px;
+  line-height: 60px;
+  text-align: center;
+
+  border: 1px solid black;
+
+  &::after {
+    content: '새로고침';
+  }
 `;
 
 const RoomListPage = () => {
