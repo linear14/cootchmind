@@ -3,6 +3,7 @@ import { Chat } from 'types/chat';
 
 const Container = styled.div`
   width: 100%;
+  height: 40px;
 `;
 
 interface ChatProps {

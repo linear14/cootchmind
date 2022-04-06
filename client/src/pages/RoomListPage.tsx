@@ -14,11 +14,12 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
+  height: 60px;
   display: flex;
 `;
 
 const Body = styled.div`
-  flex: 1;
+  height: calc(100% - 60px);
   display: flex;
 `;
 
