@@ -118,6 +118,13 @@ const RoomListPage = () => {
     }
   }, [socket, refreshRoomList]);
 
+  useEffect(() => {
+    const [playerName, uuid] = getUser();
+    if (playerName && uuid) {
+      socket.emit('saveUser', uuid);
+    }
+  }, [socket]);
+
   if (!playerName) return null;
 
   return (
