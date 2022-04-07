@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 
 import GameBoard from 'components/GameBoard';
 import PlayerList from 'components/PlayerList';
+import { getUser } from 'helpers/authUtil';
 
 const Container = styled.div`
   width: 100%;
@@ -18,8 +19,8 @@ const GamePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const playerName = localStorage.getItem('player-name');
-    if (!playerName) {
+    const [playerName, uuid] = getUser();
+    if (!playerName || !uuid) {
       navigate('/login', { replace: true });
       return;
     }

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { v4 as uuid } from 'uuid';
 
 const Container = styled.div`
   width: 400px;
@@ -36,6 +37,7 @@ const PlayerNameInput = () => {
       return;
     }
     localStorage.setItem('player-name', playerName);
+    localStorage.setItem('uuid', uuid());
     navigate('/', { replace: true });
   };
 

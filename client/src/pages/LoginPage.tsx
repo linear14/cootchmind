@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import PlayerNameInput from 'components/PlayerNameInput';
+import { getUser } from 'helpers/authUtil';
 
 const Container = styled.div`
   width: 100%;
@@ -17,8 +18,8 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const playerName = localStorage.getItem('player-name');
-    if (playerName) {
+    const [playerName, uuid] = getUser();
+    if (playerName && uuid) {
       navigate('/', { replace: true });
       return;
     }

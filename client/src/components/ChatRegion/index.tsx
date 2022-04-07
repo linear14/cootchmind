@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { SocketContext } from 'context/socket';
 import { Chat } from 'types/chat';
 import ChatList from './ChatList';
+import { getUser } from 'helpers/authUtil';
 
 const Container = styled.div`
   width: 33%;
@@ -30,10 +31,10 @@ const ChatRegion = () => {
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const playerName = localStorage.getItem('player-name');
+    const [playerName, uuid] = getUser();
     const message = inputRef.current?.value;
 
-    if (playerName && message) {
+    if (playerName && uuid && message) {
       const newChat = { from: playerName, message };
       socket.emit('chat', newChat);
       inputRef.current.value = '';

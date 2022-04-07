@@ -26,11 +26,11 @@ io.on('connection', (socket) => {
   });
 
   // 방 만들기
-  socket.on('generateRoom', ({ title, createdBy }) => {
+  socket.on('generateRoom', ({ title, createdBy, uuid }) => {
     const roomId = Date.now();
     const room: Room = {
       title,
-      users: [{ name: createdBy, isMaster: true }],
+      users: [{ name: createdBy, uuid, isMaster: true }],
       roomId,
       master: createdBy
     };

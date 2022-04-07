@@ -8,6 +8,7 @@ import RoomList from 'components/RoomList';
 import ModalPortal from 'components/ui/ModalPortal';
 import RoomGeneratorModal from 'components/ui/RoomGeneratorModal';
 import { Room } from 'types/room';
+import { getUser } from 'helpers/authUtil';
 
 const Container = styled.div`
   width: 100%;
@@ -63,9 +64,9 @@ const RoomListPage = () => {
   const socket = useContext(SocketContext);
 
   const generateRoom = (title?: string) => {
-    const playerName = localStorage.getItem('player-name');
-    if (socket && title && playerName) {
-      socket.emit('generateRoom', { title, createdBy: playerName });
+    const [playerName, uuid] = getUser();
+    if (socket && title && playerName && uuid) {
+      socket.emit('generateRoom', { title, createdBy: playerName, uuid });
     } else {
       // 예외 처리
     }
@@ -82,8 +83,8 @@ const RoomListPage = () => {
   }, [socket]);
 
   useEffect(() => {
-    const playerName = localStorage.getItem('player-name');
-    if (!playerName) {
+    const [playerName, uuid] = getUser();
+    if (!playerName || !uuid) {
       navigate('/login', { replace: true });
       return;
     }
