@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 
 import ChatRegion from 'components/ChatRegion';
 import RoomList from 'components/RoomList';
+import ModalPortal from 'components/ui/ModalPortal';
+import RoomGeneratorModal from 'components/ui/RoomGeneratorModal';
 
 const Container = styled.div`
   width: 100%;
@@ -53,7 +55,12 @@ const RoomRefreshBtn = styled.div`
 
 const RoomListPage = () => {
   const [playerName, setPlayerName] = useState<string>();
+  const [roomModal, setRoomModal] = useState<boolean>(false);
   const navigate = useNavigate();
+
+  const handleModal = () => {
+    setRoomModal((prev) => !prev);
+  };
 
   useEffect(() => {
     const playerName = localStorage.getItem('player-name');
@@ -69,7 +76,7 @@ const RoomListPage = () => {
   return (
     <Container>
       <Header>
-        <CreateRoomBtn />
+        <CreateRoomBtn onClick={handleModal} />
         <RoomRefreshBtn />
         <div>현재 사용자: {playerName}</div>
       </Header>
@@ -77,6 +84,7 @@ const RoomListPage = () => {
         <ChatRegion />
         <RoomList />
       </Body>
+      <ModalPortal>{roomModal && <RoomGeneratorModal onClose={handleModal} />}</ModalPortal>
     </Container>
   );
 };

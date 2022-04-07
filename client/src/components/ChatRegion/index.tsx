@@ -35,7 +35,7 @@ const ChatRegion = () => {
 
     if (playerName && message) {
       const newChat = { from: playerName, message };
-      socket.emit('onChat', newChat);
+      socket.emit('chat', newChat);
       inputRef.current.value = '';
     }
   };

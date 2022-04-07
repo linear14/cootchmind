@@ -17,7 +17,8 @@ io.on('connection', (socket) => {
     console.log(`bye user (${socket.id})`);
   });
 
-  socket.on('onChat', (chat) => {
+  // 채팅
+  socket.on('chat', (chat) => {
     io.emit('onChatReceived', chat);
   });
 });
