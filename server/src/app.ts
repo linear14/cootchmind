@@ -10,6 +10,8 @@ const io = new Server(server, {
   }
 });
 
+const rooms = [];
+
 io.on('connection', (socket) => {
   console.log(`a user connected (${socket.id})`);
 
@@ -21,6 +23,16 @@ io.on('connection', (socket) => {
   socket.on('chat', (chat) => {
     io.emit('onChatReceived', chat);
   });
+
+  // 방 만들기
+  socket.on('generateRoom', ({ title, createdBy }) => {
+    const roomNumber = Date.now();
+    const room = { title, users: [{ name: createdBy, isMaster: true }], roomNumber };
+    rooms.push(room);
+
+    io.emit('onRoomGenerated', roomNumber);
+  });
+
 });
 
 // app.get('/test', (req: Request, res: Response, next: NextFunction) => {

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import styled from 'styled-components';
 
 const Container = styled.div`
@@ -76,12 +77,18 @@ const CloseButton = styled.button`
 `;
 
 interface RoomGeneratorProps {
+  onGenerate: (title?: string) => void;
   onClose: () => void;
 }
 
-const RoomGeneratorModal = ({ onClose }: RoomGeneratorProps) => {
+const RoomGeneratorModal = ({ onGenerate, onClose }: RoomGeneratorProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const generateRoom = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const title = inputRef.current?.value;
+    onGenerate(title);
   };
 
   return (
@@ -90,7 +97,7 @@ const RoomGeneratorModal = ({ onClose }: RoomGeneratorProps) => {
         <h2>방 만들기</h2>
         <Form onSubmit={generateRoom}>
           <p>방 제목</p>
-          <input placeholder='방 제목을 입력해주세요' />
+          <input ref={inputRef} placeholder='방 제목을 입력해주세요' />
         </Form>
         <Buttons>
           <GenerateRoomButton onClick={generateRoom} />

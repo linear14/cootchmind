@@ -1,7 +1,8 @@
 import styled from 'styled-components';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { SocketContext } from 'context/socket';
 import ChatRegion from 'components/ChatRegion';
 import RoomList from 'components/RoomList';
 import ModalPortal from 'components/ui/ModalPortal';
@@ -57,6 +58,16 @@ const RoomListPage = () => {
   const [playerName, setPlayerName] = useState<string>();
   const [roomModal, setRoomModal] = useState<boolean>(false);
   const navigate = useNavigate();
+  const socket = useContext(SocketContext);
+
+  const generateRoom = (title?: string) => {
+    const playerName = localStorage.getItem('player-name');
+    if (socket && title && playerName) {
+      socket.emit('generateRoom', { title, createdBy: playerName });
+    } else {
+      // 예외 처리
+    }
+  };
 
   const handleModal = () => {
     setRoomModal((prev) => !prev);
@@ -71,6 +82,16 @@ const RoomListPage = () => {
     setPlayerName(playerName);
   }, [navigate]);
 
+  useEffect(() => {
+    socket.on('onRoomGenerated', (roomNumber: number) => {
+      navigate(`/game/${roomNumber}`);
+    });
+
+    return () => {
+      socket.off('onRoomGenerated');
+    };
+  }, [socket, navigate]);
+
   if (!playerName) return null;
 
   return (
@@ -84,7 +105,9 @@ const RoomListPage = () => {
         <ChatRegion />
         <RoomList />
       </Body>
-      <ModalPortal>{roomModal && <RoomGeneratorModal onClose={handleModal} />}</ModalPortal>
+      <ModalPortal>
+        {roomModal && <RoomGeneratorModal onGenerate={generateRoom} onClose={handleModal} />}
+      </ModalPortal>
     </Container>
   );
 };

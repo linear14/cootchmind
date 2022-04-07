@@ -16,7 +16,7 @@ function App() {
           <Routes>
             <Route path='/' element={<RoomListPage />} />
             <Route path='/login' element={<LoginPage />} />
-            <Route path='/game' element={<GamePage />} />
+            <Route path='/game/:id' element={<GamePage />} />
             <Route path='*' element={<div>Not Found</div>} />
           </Routes>
         </Layout>
