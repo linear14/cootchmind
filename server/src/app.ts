@@ -13,10 +13,11 @@ const io = new Server(server, {
 });
 
 const rooms: Room[] = [];
-const sockets = new Map<string, string | undefined>(); // socket id와 uuid 매핑
+const sockets = new Map<string, string | undefined>(); // socket id와 uuid 매핑 // 아직 로그인 하지 않은 유저도 포함
 const sessions = new Map<string, number>(); // uuid와 session Count 매핑
-const usersLoggedIn = new Set<string>(); // socket id
-const usersInRoom = new Set<string>(); // socket id
+const usersLoggedIn = new Set<string>(); // uuid // 로그인 한 유저만
+const usersInRoom = new Set<string>(); // uuid // 게임 방에 들어있는 유저
+const socketsInRoom = new Set<string>(); // socket id // 게임 방에 접속되어 있는 소켓
 
 io.on('connection', (socket) => {
   sockets.set(socket.id, undefined);
@@ -29,7 +30,7 @@ io.on('connection', (socket) => {
     if (uuid) {
       sockets.set(socket.id, uuid);
       sessions.set(uuid, (sessions.get(uuid) || 0) + 1);
-      usersLoggedIn.add(socket.id);
+      usersLoggedIn.add(uuid);
 
       // LOG
       console.log(`[[ User Logged In (${socket.id}) ]]`);
@@ -45,19 +46,23 @@ io.on('connection', (socket) => {
       if (currentSessionCount) {
         if (currentSessionCount === 1) {
           sessions.delete(uuid);
+          usersLoggedIn.delete(uuid);
+          usersInRoom.delete(uuid);
         } else {
+          if (socketsInRoom.has(socket.id)) {
+            usersInRoom.delete(uuid);
+          }
           sessions.set(uuid, currentSessionCount - 1);
         }
       }
     }
-    usersLoggedIn.delete(socket.id);
-    usersInRoom.delete(socket.id);
+    socketsInRoom.delete(socket.id);
     sockets.delete(socket.id);
 
     // LOG
     console.log(`[[ Bye (${socket.id}) ]]`);
     if (uuid) {
-      console.log(`[[ Current User Session Count : ${sessions.get(uuid)}]]`);
+      console.log(`[[ Current User Session Count : ${sessions.get(uuid) || 0}]]`);
     }
     countLog(sockets.size, usersLoggedIn.size, usersInRoom.size);
   });
