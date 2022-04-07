@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { SocketContext } from 'context/socket';
@@ -7,6 +7,7 @@ import ChatRegion from 'components/ChatRegion';
 import RoomList from 'components/RoomList';
 import ModalPortal from 'components/ui/ModalPortal';
 import RoomGeneratorModal from 'components/ui/RoomGeneratorModal';
+import { Room } from 'types/room';
 
 const Container = styled.div`
   width: 100%;
@@ -56,6 +57,7 @@ const RoomRefreshBtn = styled.div`
 
 const RoomListPage = () => {
   const [playerName, setPlayerName] = useState<string>();
+  const [roomList, setRoomList] = useState<Room[]>([]);
   const [roomModal, setRoomModal] = useState<boolean>(false);
   const navigate = useNavigate();
   const socket = useContext(SocketContext);
@@ -73,6 +75,12 @@ const RoomListPage = () => {
     setRoomModal((prev) => !prev);
   };
 
+  const refreshRoomList = useCallback(() => {
+    if (socket) {
+      socket.emit('refreshRoomList');
+    }
+  }, [socket]);
+
   useEffect(() => {
     const playerName = localStorage.getItem('player-name');
     if (!playerName) {
@@ -83,8 +91,8 @@ const RoomListPage = () => {
   }, [navigate]);
 
   useEffect(() => {
-    socket.on('onRoomGenerated', (roomNumber: number) => {
-      navigate(`/game/${roomNumber}`);
+    socket.on('onRoomGenerated', (roomId: number) => {
+      navigate(`/game/${roomId}`);
     });
 
     return () => {
@@ -92,18 +100,35 @@ const RoomListPage = () => {
     };
   }, [socket, navigate]);
 
+  useEffect(() => {
+    if (socket) {
+      socket.on('onRoomListRefreshed', (roomList: Room[]) => {
+        setRoomList(roomList);
+      });
+    }
+    return () => {
+      socket.off('onRoomListRefreshed');
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (socket) {
+      refreshRoomList();
+    }
+  }, [socket, refreshRoomList]);
+
   if (!playerName) return null;
 
   return (
     <Container>
       <Header>
         <CreateRoomBtn onClick={handleModal} />
-        <RoomRefreshBtn />
+        <RoomRefreshBtn onClick={refreshRoomList} />
         <div>현재 사용자: {playerName}</div>
       </Header>
       <Body>
         <ChatRegion />
-        <RoomList />
+        <RoomList listItem={roomList} />
       </Body>
       <ModalPortal>
         {roomModal && <RoomGeneratorModal onGenerate={generateRoom} onClose={handleModal} />}

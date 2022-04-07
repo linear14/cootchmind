@@ -1,6 +1,8 @@
 import styled from 'styled-components';
+
+import { Room } from 'types/room';
 import NavButtons from './NavButtons';
-import Room from './Room';
+import RoomItem from './RoomItem';
 
 const Container = styled.div`
   flex: 1;
@@ -16,18 +18,17 @@ const ListContainer = styled.div`
   gap: 1rem;
 `;
 
-const RoomList = () => {
+interface RoomListProps {
+  listItem: Room[];
+}
+
+const RoomList = ({ listItem }: RoomListProps) => {
   return (
     <Container>
       <ListContainer>
-        <Room />
-        <Room />
-        <Room />
-        <Room />
-        <Room />
-        <Room />
-        <Room />
-        <Room />
+        {listItem.map((room) => (
+          <RoomItem key={room.roomId} item={room} />
+        ))}
       </ListContainer>
       <NavButtons />
     </Container>

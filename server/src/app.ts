@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
+import { Room } from 'types/room';
 
 const app = express();
 const server = http.createServer(app);
@@ -10,7 +11,7 @@ const io = new Server(server, {
   }
 });
 
-const rooms = [];
+const rooms: Room[] = [];
 
 io.on('connection', (socket) => {
   console.log(`a user connected (${socket.id})`);
@@ -26,13 +27,22 @@ io.on('connection', (socket) => {
 
   // 방 만들기
   socket.on('generateRoom', ({ title, createdBy }) => {
-    const roomNumber = Date.now();
-    const room = { title, users: [{ name: createdBy, isMaster: true }], roomNumber };
+    const roomId = Date.now();
+    const room: Room = {
+      title,
+      users: [{ name: createdBy, isMaster: true }],
+      roomId,
+      master: createdBy
+    };
     rooms.push(room);
 
-    io.emit('onRoomGenerated', roomNumber);
+    socket.emit('onRoomGenerated', roomId);
   });
 
+  // 방 조회하기
+  socket.on('refreshRoomList', () => {
+    socket.emit('onRoomListRefreshed', rooms);
+  });
 });
 
 // app.get('/test', (req: Request, res: Response, next: NextFunction) => {
