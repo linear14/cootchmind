@@ -96,8 +96,13 @@ const RoomListPage = () => {
       navigate(`/game/${roomId}`);
     });
 
+    socket.on('onSuccessRoomConnection', (roomId: number) => {
+      navigate(`/game/${roomId}`);
+    });
+
     return () => {
       socket.off('onRoomGenerated');
+      socket.off('onSuccessRoomConnection');
     };
   }, [socket, navigate]);
 

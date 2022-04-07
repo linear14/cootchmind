@@ -26,7 +26,9 @@ io.on('connection', (socket) => {
   console.log(`[[ Hello (${socket.id}) ]]`);
   countLog(sockets.size, usersLoggedIn.size, usersInRoom.size);
 
+  // uuid 위조 검사도 해야함
   socket.on('saveUser', (uuid) => {
+    if (sockets.get(socket.id) === uuid) return;
     if (uuid) {
       sockets.set(socket.id, uuid);
       sessions.set(uuid, (sessions.get(uuid) || 0) + 1);
@@ -38,6 +40,38 @@ io.on('connection', (socket) => {
       countLog(sockets.size, usersLoggedIn.size, usersInRoom.size);
     }
   });
+
+  socket.on('tryEnterGameRoom', (roomId) => {
+    // 게임 방이 존재하는지
+    const room = rooms.find((room) => room.roomId === roomId);
+    if (!room) {
+      socket.emit('onError', '해당 방이 존재하지 않습니다.');
+      return;
+    }
+
+    // 게임 방의 인원수가 가득 차있는지
+    if (room.users.length >= 6) {
+      socket.emit('onError', '이미 가득 찬 방입니다.');
+      return;
+    }
+
+    // 게임 방(전체)에 이미 존재하는 uuid가 있는지
+    const uuid = sockets.get(socket.id);
+    if (!uuid) {
+      socket.emit('onError', '사용자 아이디가 존재하지 않습니다.');
+      return;
+    }
+    if (usersInRoom.has(uuid)) {
+      socket.emit('onError', '이미 접속 중인 방이 존재합니다.');
+      return;
+    }
+
+    socket.emit('onSuccessRoomConnection', roomId);
+  });
+
+  socket.on('enterGameRoom', () => {});
+
+  socket.on('leaveGameRoom', () => {});
 
   socket.on('disconnect', () => {
     const uuid = sockets.get(socket.id);

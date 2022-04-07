@@ -1,8 +1,7 @@
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
 import { Room } from 'types/room';
 
-const Container = styled(Link)`
+const Container = styled.div`
   width: calc((100% - 16px) / 2);
   height: 120px;
   border: 1px solid black;
@@ -10,10 +9,11 @@ const Container = styled(Link)`
 
 interface RoomItemProps {
   item: Room;
+  onClickItem: (roomId: number) => void;
 }
 
-const RoomItem = ({ item }: RoomItemProps) => {
-  return <Container to={`/game/${item.roomId}`}>{item.title}</Container>;
+const RoomItem = ({ item, onClickItem }: RoomItemProps) => {
+  return <Container onClick={() => onClickItem(item.roomId)}>{item.title}</Container>;
 };
 
 export default RoomItem;

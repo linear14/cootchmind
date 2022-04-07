@@ -1,3 +1,5 @@
+import { SocketContext } from 'context/socket';
+import { useCallback, useContext } from 'react';
 import styled from 'styled-components';
 
 import { Room } from 'types/room';
@@ -23,11 +25,20 @@ interface RoomListProps {
 }
 
 const RoomList = ({ listItem }: RoomListProps) => {
+  const socket = useContext(SocketContext);
+
+  const tryEnterRoom = useCallback(
+    (roomId: number) => {
+      socket.emit('tryEnterGameRoom', roomId);
+    },
+    [socket]
+  );
+
   return (
     <Container>
       <ListContainer>
         {listItem.map((room) => (
-          <RoomItem key={room.roomId} item={room} />
+          <RoomItem key={room.roomId} item={room} onClickItem={tryEnterRoom} />
         ))}
       </ListContainer>
       <NavButtons />
