@@ -1,6 +1,8 @@
 import { useRef } from 'react';
 import styled from 'styled-components';
 
+import ModalPortal from 'wrapper/ModalPortal';
+
 const Container = styled.div`
   width: calc(90vh * 1.35);
   min-width: calc(660px * 1.35);
@@ -92,19 +94,21 @@ const RoomGeneratorModal = ({ onGenerate, onClose }: RoomGeneratorProps) => {
   };
 
   return (
-    <Container>
-      <Content>
-        <h2>방 만들기</h2>
-        <Form onSubmit={generateRoom}>
-          <p>방 제목</p>
-          <input ref={inputRef} placeholder='방 제목을 입력해주세요' />
-        </Form>
-        <Buttons>
-          <GenerateRoomButton onClick={generateRoom} />
-          <CloseButton onClick={onClose} />
-        </Buttons>
-      </Content>
-    </Container>
+    <ModalPortal>
+      <Container>
+        <Content>
+          <h2>방 만들기</h2>
+          <Form onSubmit={generateRoom}>
+            <p>방 제목</p>
+            <input ref={inputRef} placeholder='방 제목을 입력해주세요' />
+          </Form>
+          <Buttons>
+            <GenerateRoomButton onClick={generateRoom} />
+            <CloseButton onClick={onClose} />
+          </Buttons>
+        </Content>
+      </Container>
+    </ModalPortal>
   );
 };
 

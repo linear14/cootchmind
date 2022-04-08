@@ -5,10 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import { SocketContext } from 'context/socket';
 import ChatRegion from 'components/ChatRegion';
 import RoomList from 'components/RoomList';
-import ModalPortal from 'components/ui/ModalPortal';
 import RoomGeneratorModal from 'components/ui/RoomGeneratorModal';
 import { Room } from 'types/room';
 import { getUser } from 'helpers/authUtil';
+import ErrorModal from 'components/ui/ErrorModal';
 
 const Container = styled.div`
   width: 100%;
@@ -60,6 +60,7 @@ const RoomListPage = () => {
   const [playerName, setPlayerName] = useState<string>();
   const [roomList, setRoomList] = useState<Room[]>([]);
   const [roomModal, setRoomModal] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const socket = useContext(SocketContext);
 
@@ -72,8 +73,12 @@ const RoomListPage = () => {
     }
   };
 
-  const handleModal = () => {
+  const handleRoomModal = () => {
     setRoomModal((prev) => !prev);
+  };
+
+  const closeErrorModal = () => {
+    setError(null);
   };
 
   const refreshRoomList = useCallback(() => {
@@ -111,9 +116,13 @@ const RoomListPage = () => {
       socket.on('onRoomListRefreshed', (roomList: Room[]) => {
         setRoomList(roomList);
       });
+      socket.on('onError', (message: string) => {
+        setError(message);
+      });
     }
     return () => {
       socket.off('onRoomListRefreshed');
+      socket.off('onError');
     };
   }, [socket]);
 
@@ -135,7 +144,7 @@ const RoomListPage = () => {
   return (
     <Container>
       <Header>
-        <CreateRoomBtn onClick={handleModal} />
+        <CreateRoomBtn onClick={handleRoomModal} />
         <RoomRefreshBtn onClick={refreshRoomList} />
         <div>현재 사용자: {playerName}</div>
       </Header>
@@ -143,9 +152,8 @@ const RoomListPage = () => {
         <ChatRegion />
         <RoomList listItem={roomList} />
       </Body>
-      <ModalPortal>
-        {roomModal && <RoomGeneratorModal onGenerate={generateRoom} onClose={handleModal} />}
-      </ModalPortal>
+      {roomModal && <RoomGeneratorModal onGenerate={generateRoom} onClose={handleRoomModal} />}
+      {error && <ErrorModal message={error} onClose={closeErrorModal} />}
     </Container>
   );
 };
