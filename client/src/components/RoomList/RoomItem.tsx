@@ -9,7 +9,7 @@ const Container = styled.div`
 
 interface RoomItemProps {
   item: Room;
-  onClickItem: (roomId: number) => void;
+  onClickItem: (roomId: string) => void;
 }
 
 const RoomItem = ({ item, onClickItem }: RoomItemProps) => {

@@ -12,7 +12,7 @@ const io = new Server(server, {
   }
 });
 
-const rooms: Room[] = [];
+const rooms = new Map<string, Room>();
 const sockets = new Map<string, string | undefined>(); // socket id와 uuid 매핑 // 아직 로그인 하지 않은 유저도 포함
 const sessions = new Map<string, number>(); // uuid와 session Count 매핑
 const usersLoggedIn = new Set<string>(); // uuid // 로그인 한 유저만
@@ -57,9 +57,10 @@ io.on('connection', (socket) => {
     }
   });
 
+  // 방 입장하기
   socket.on('tryEnterGameRoom', ({ roomId, playerName, clientUUID }) => {
     // 게임 방이 존재하는지
-    const room = rooms.find((room) => room.roomId === roomId);
+    const room = rooms.get(roomId);
     if (!room) {
       socket.emit('onError', { message: '해당 방이 존재하지 않습니다.' });
       return;
@@ -82,7 +83,7 @@ io.on('connection', (socket) => {
       sockets.set(socket.id, undefined);
 
       socket.emit('onError', {
-        message: '저장된 사용자 정보가 아닙니다. 다시 시도해주세요.',
+        message: '사용자 정보 위변조가 감지되었습니다. 닉네임 설정창으로 돌아갑니다.',
         closeConnection: true
       });
       return;
@@ -127,14 +128,14 @@ io.on('connection', (socket) => {
 
   // 방 만들기
   socket.on('generateRoom', ({ title, createdBy, uuid }) => {
-    const roomId = Date.now();
+    const roomId = Date.now().toString();
     const room: Room = {
       title,
       users: [{ name: createdBy, uuid, isMaster: true }],
       roomId,
       master: createdBy
     };
-    rooms.push(room);
+    rooms.set(roomId, room);
     usersInRoom.add(uuid);
     socketsInRoom.add(socket.id);
     socket.emit('onRoomGenerated', roomId);
@@ -142,7 +143,7 @@ io.on('connection', (socket) => {
 
   // 방 조회하기
   socket.on('refreshRoomList', () => {
-    socket.emit('onRoomListRefreshed', rooms);
+    socket.emit('onRoomListRefreshed', Array.from(rooms.values()));
   });
 });
 

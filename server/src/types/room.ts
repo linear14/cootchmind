@@ -1,5 +1,5 @@
 export interface Room {
-  roomId: number;
+  roomId: string;
   title: string;
   users: { name: string; uuid: string; isMaster: boolean }[];
   master: string;

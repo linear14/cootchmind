@@ -29,7 +29,7 @@ const RoomList = ({ listItem }: RoomListProps) => {
   const socket = useContext(SocketContext);
 
   const tryEnterRoom = useCallback(
-    (roomId: number) => {
+    (roomId: string) => {
       const [playerName, uuid] = getUser();
       socket.emit('tryEnterGameRoom', { roomId, playerName, clientUUID: uuid });
     },
