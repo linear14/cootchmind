@@ -6,6 +6,7 @@ import GameBoard from 'components/GameBoard';
 import PlayerList from 'components/PlayerList';
 import { getUser } from 'helpers/authUtil';
 import { SocketContext } from 'context/socket';
+import { Player } from 'types/player';
 
 const Container = styled.div`
   width: 100%;
@@ -17,6 +18,7 @@ const Container = styled.div`
 
 const GamePage = () => {
   const [isLoading, setLoading] = useState(true);
+  const [playerList, setPlayerList] = useState<(Player | null)[]>([]);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
   const { roomId } = useParams();
@@ -33,7 +35,7 @@ const GamePage = () => {
   useEffect(() => {
     if (socket) {
       socket.on('onPlayerRefreshed', (users) => {
-        console.log(users);
+        setPlayerList(users);
       });
     }
     return () => {
@@ -56,9 +58,9 @@ const GamePage = () => {
 
   return (
     <Container>
-      <PlayerList />
+      <PlayerList listItem={[playerList[0], playerList[2], playerList[4]]} />
       <GameBoard />
-      <PlayerList />
+      <PlayerList listItem={[playerList[1], playerList[3], playerList[5]]} />
     </Container>
   );
 };

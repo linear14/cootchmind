@@ -1,5 +1,7 @@
 import styled from 'styled-components';
-import Player from './Player';
+
+import { Player } from 'types/player';
+import PlayerItem from './PlayerItem';
 
 const Container = styled.div`
   flex: 1;
@@ -12,12 +14,16 @@ const Container = styled.div`
   gap: 16px;
 `;
 
-const PlayerList = () => {
+interface PlayerListProps {
+  listItem: (Player | null)[];
+}
+
+const PlayerList = ({ listItem }: PlayerListProps) => {
   return (
     <Container>
-      <Player />
-      <Player />
-      <Player />
+      {listItem.map((item, idx) => (
+        <PlayerItem key={item?.uuid ?? `pi${idx}`} item={item} />
+      ))}
     </Container>
   );
 };

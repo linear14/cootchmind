@@ -67,7 +67,7 @@ io.on('connection', (socket) => {
     }
 
     // 게임 방의 인원수가 가득 차있는지
-    if (room.users.length >= 6) {
+    if (room.users.filter((user) => user === null).length === 0) {
       socket.emit('onError', { message: '이미 가득 찬 방입니다.' });
       return;
     }
@@ -97,12 +97,20 @@ io.on('connection', (socket) => {
 
     usersInRoom.add(uuid);
     socketsInRoom.add(socket.id);
-    room.users.push({ name: playerName, uuid, isMaster: room.master.uuid === uuid });
+    const emptyIdx = room.users.findIndex((user) => user === null);
+    if (emptyIdx >= 0) {
+      room.users[emptyIdx] = {
+        name: playerName,
+        uuid,
+        isMaster: room.master.uuid === uuid,
+        answerCnt: 0
+      };
+    }
     socket.emit('onSuccessRoomConnection', roomId);
   });
 
   // gamePage에 접속 (url 바로 접속 / 정상 경로 접속 구분)
-  socket.on('enterGameRoom', ({ roomId, playerName, uuid }) => {
+  socket.on('enterGameRoom', ({ roomId, uuid }) => {
     const room = rooms.get(roomId);
     if (!room) {
       socket.emit('onError', { message: '존재하지 않는 방입니다. ' });
@@ -116,7 +124,7 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('onPlayerRefreshed', room.users);
   });
 
-  socket.on('leaveGameRoom', ({ roomId, playerName, uuid }) => {
+  socket.on('leaveGameRoom', ({ roomId, uuid }) => {
     const room = rooms.get(roomId);
     if (!room) {
       socket.emit('onError', { message: '존재하지 않는 방입니다. ' });
@@ -124,7 +132,10 @@ io.on('connection', (socket) => {
     }
 
     socket.leave(roomId);
-    room.users = room.users.filter((user) => user.uuid !== uuid);
+    const userIdx = room.users.findIndex((user) => user?.uuid === uuid);
+    if (userIdx >= 0) {
+      room.users[userIdx] = null;
+    }
     io.to(roomId).emit('onPlayerRefreshed', room.users);
   });
 
@@ -154,11 +165,13 @@ io.on('connection', (socket) => {
     const roomId = Date.now().toString();
     const room: Room = {
       title,
-      users: [{ name: createdBy, uuid, isMaster: true }],
+      users: Array.from({ length: 6 }, () => null),
       roomId,
       master: { name: createdBy, uuid }
     };
+    room.users[0] = { name: createdBy, uuid, isMaster: true, answerCnt: 0 };
     rooms.set(roomId, room);
+
     usersInRoom.add(uuid);
     socketsInRoom.add(socket.id);
     socket.emit('onRoomGenerated', roomId);
