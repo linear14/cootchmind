@@ -95,15 +95,38 @@ io.on('connection', (socket) => {
       return;
     }
 
-    room.users.push({ name: playerName, uuid, isMaster: false });
     usersInRoom.add(uuid);
     socketsInRoom.add(socket.id);
+    room.users.push({ name: playerName, uuid, isMaster: room.master.uuid === uuid });
     socket.emit('onSuccessRoomConnection', roomId);
   });
 
-  socket.on('enterGameRoom', () => {});
+  // gamePage에 접속 (url 바로 접속 / 정상 경로 접속 구분)
+  socket.on('enterGameRoom', ({ roomId, playerName, uuid }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다. ' });
+      return;
+    }
+    if (!usersInRoom.has(uuid)) {
+      socket.emit('onError', { message: '정상적인 경로로 입장해주세요.' });
+      return;
+    }
+    socket.join(roomId);
+    io.to(roomId).emit('onPlayerRefreshed', room.users);
+  });
 
-  socket.on('leaveGameRoom', () => {});
+  socket.on('leaveGameRoom', ({ roomId, playerName, uuid }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다. ' });
+      return;
+    }
+
+    socket.leave(roomId);
+    room.users = room.users.filter((user) => user.uuid !== uuid);
+    io.to(roomId).emit('onPlayerRefreshed', room.users);
+  });
 
   socket.on('disconnect', () => {
     const uuid = sockets.get(socket.id);
@@ -133,7 +156,7 @@ io.on('connection', (socket) => {
       title,
       users: [{ name: createdBy, uuid, isMaster: true }],
       roomId,
-      master: createdBy
+      master: { name: createdBy, uuid }
     };
     rooms.set(roomId, room);
     usersInRoom.add(uuid);
