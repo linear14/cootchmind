@@ -56,11 +56,16 @@ const RoomRefreshBtn = styled.div`
   }
 `;
 
+interface SocketError {
+  message: string;
+  callback: () => void;
+}
+
 const RoomListPage = () => {
   const [playerName, setPlayerName] = useState<string>();
   const [roomList, setRoomList] = useState<Room[]>([]);
   const [roomModal, setRoomModal] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<SocketError | null>(null);
   const navigate = useNavigate();
   const socket = useContext(SocketContext);
 
@@ -75,10 +80,6 @@ const RoomListPage = () => {
 
   const handleRoomModal = () => {
     setRoomModal((prev) => !prev);
-  };
-
-  const closeErrorModal = () => {
-    setError(null);
   };
 
   const refreshRoomList = useCallback(() => {
@@ -105,9 +106,28 @@ const RoomListPage = () => {
       navigate(`/game/${roomId}`);
     });
 
+    socket.on(
+      'onError',
+      ({ message, closeConnection }: { message: string; closeConnection: boolean | undefined }) => {
+        if (closeConnection) {
+          setError({
+            message,
+            callback: () => {
+              window.localStorage.removeItem('uuid');
+              window.localStorage.removeItem('player-name');
+              navigate(`/login`, { replace: true });
+            }
+          });
+        } else {
+          setError({ message, callback: () => setError(null) });
+        }
+      }
+    );
+
     return () => {
       socket.off('onRoomGenerated');
       socket.off('onSuccessRoomConnection');
+      socket.off('onError');
     };
   }, [socket, navigate]);
 
@@ -116,13 +136,9 @@ const RoomListPage = () => {
       socket.on('onRoomListRefreshed', (roomList: Room[]) => {
         setRoomList(roomList);
       });
-      socket.on('onError', (message: string) => {
-        setError(message);
-      });
     }
     return () => {
       socket.off('onRoomListRefreshed');
-      socket.off('onError');
     };
   }, [socket]);
 
@@ -153,7 +169,7 @@ const RoomListPage = () => {
         <RoomList listItem={roomList} />
       </Body>
       {roomModal && <RoomGeneratorModal onGenerate={generateRoom} onClose={handleRoomModal} />}
-      {error && <ErrorModal message={error} onClose={closeErrorModal} />}
+      {error && <ErrorModal message={error.message} onClose={error.callback} />}
     </Container>
   );
 };

@@ -1,4 +1,5 @@
 import { SocketContext } from 'context/socket';
+import { getUser } from 'helpers/authUtil';
 import { useCallback, useContext } from 'react';
 import styled from 'styled-components';
 
@@ -29,7 +30,8 @@ const RoomList = ({ listItem }: RoomListProps) => {
 
   const tryEnterRoom = useCallback(
     (roomId: number) => {
-      socket.emit('tryEnterGameRoom', roomId);
+      const [playerName, uuid] = getUser();
+      socket.emit('tryEnterGameRoom', { roomId, playerName, clientUUID: uuid });
     },
     [socket]
   );

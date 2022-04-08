@@ -19,6 +19,22 @@ const usersLoggedIn = new Set<string>(); // uuid // 로그인 한 유저만
 const usersInRoom = new Set<string>(); // uuid // 게임 방에 들어있는 유저
 const socketsInRoom = new Set<string>(); // socket id // 게임 방에 접속되어 있는 소켓
 
+const removeSession = (socketId: string, uuid: string) => {
+  const currentSessionCount = sessions.get(uuid);
+  if (currentSessionCount) {
+    if (currentSessionCount === 1) {
+      sessions.delete(uuid);
+      usersLoggedIn.delete(uuid);
+      usersInRoom.delete(uuid);
+    } else {
+      if (socketsInRoom.has(socketId)) {
+        usersInRoom.delete(uuid);
+      }
+      sessions.set(uuid, currentSessionCount - 1);
+    }
+  }
+};
+
 io.on('connection', (socket) => {
   sockets.set(socket.id, undefined);
 
@@ -41,31 +57,46 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('tryEnterGameRoom', (roomId) => {
+  socket.on('tryEnterGameRoom', ({ roomId, playerName, clientUUID }) => {
     // 게임 방이 존재하는지
     const room = rooms.find((room) => room.roomId === roomId);
     if (!room) {
-      socket.emit('onError', '해당 방이 존재하지 않습니다.');
+      socket.emit('onError', { message: '해당 방이 존재하지 않습니다.' });
       return;
     }
 
     // 게임 방의 인원수가 가득 차있는지
     if (room.users.length >= 6) {
-      socket.emit('onError', '이미 가득 찬 방입니다.');
+      socket.emit('onError', { message: '이미 가득 찬 방입니다.' });
+      return;
+    }
+
+    // 사용자의 uuid가 위조되지 않았는지
+    const uuid = sockets.get(socket.id);
+    if (!uuid || uuid !== clientUUID) {
+      if (uuid) {
+        removeSession(socket.id, uuid);
+        usersLoggedIn.delete(uuid);
+        usersInRoom.delete(uuid);
+      }
+      sockets.set(socket.id, undefined);
+
+      socket.emit('onError', {
+        message: '저장된 사용자 정보가 아닙니다. 다시 시도해주세요.',
+        closeConnection: true
+      });
       return;
     }
 
     // 게임 방(전체)에 이미 존재하는 uuid가 있는지
-    const uuid = sockets.get(socket.id);
-    if (!uuid) {
-      socket.emit('onError', '사용자 아이디가 존재하지 않습니다.');
-      return;
-    }
     if (usersInRoom.has(uuid)) {
-      socket.emit('onError', '이미 접속 중인 방이 존재합니다.');
+      socket.emit('onError', { message: '이미 접속 중인 방이 존재합니다.' });
       return;
     }
 
+    room.users.push({ name: playerName, uuid, isMaster: false });
+    usersInRoom.add(uuid);
+    socketsInRoom.add(socket.id);
     socket.emit('onSuccessRoomConnection', roomId);
   });
 
@@ -76,19 +107,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const uuid = sockets.get(socket.id);
     if (uuid) {
-      const currentSessionCount = sessions.get(uuid);
-      if (currentSessionCount) {
-        if (currentSessionCount === 1) {
-          sessions.delete(uuid);
-          usersLoggedIn.delete(uuid);
-          usersInRoom.delete(uuid);
-        } else {
-          if (socketsInRoom.has(socket.id)) {
-            usersInRoom.delete(uuid);
-          }
-          sessions.set(uuid, currentSessionCount - 1);
-        }
-      }
+      removeSession(socket.id, uuid);
     }
     socketsInRoom.delete(socket.id);
     sockets.delete(socket.id);
@@ -116,7 +135,8 @@ io.on('connection', (socket) => {
       master: createdBy
     };
     rooms.push(room);
-
+    usersInRoom.add(uuid);
+    socketsInRoom.add(socket.id);
     socket.emit('onRoomGenerated', roomId);
   });
 
@@ -124,16 +144,6 @@ io.on('connection', (socket) => {
   socket.on('refreshRoomList', () => {
     socket.emit('onRoomListRefreshed', rooms);
   });
-
-  // // 방 입장하기
-  // socket.on('enterRoom', (roomId) => {
-  //   const room = rooms.find((room) => room.roomNumber === roomId);
-  //   if (room) {
-  //     io.emit('onRoomEntered', roomId);
-  //   } else {
-  //     // 에러메시지 (방이 사라졌다던지)
-  //   }
-  // });
 });
 
 server.listen('4000', () => {
