@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { SocketContext } from 'context/socket';
 import ChatRegion from 'components/ChatRegion';
