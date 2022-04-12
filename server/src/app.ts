@@ -127,16 +127,22 @@ io.on('connection', (socket) => {
   socket.on('leaveGameRoom', ({ roomId, uuid }) => {
     const room = rooms.get(roomId);
     if (!room) {
-      socket.emit('onError', { message: '존재하지 않는 방입니다. ' });
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
       return;
     }
 
-    socket.leave(roomId);
-    const userIdx = room.users.findIndex((user) => user?.uuid === uuid);
-    if (userIdx >= 0) {
-      room.users[userIdx] = null;
+    if (room.master.uuid === uuid) {
+      socket.to(roomId).emit('onMasterLeftRoom'); // 방장 빼고 emit
+      io.socketsLeave(roomId);
+      rooms.delete(roomId);
+    } else {
+      socket.leave(roomId);
+      const userIdx = room.users.findIndex((user) => user?.uuid === uuid);
+      if (userIdx >= 0) {
+        room.users[userIdx] = null;
+      }
+      io.to(roomId).emit('onPlayerRefreshed', room.users);
     }
-    io.to(roomId).emit('onPlayerRefreshed', room.users);
   });
 
   socket.on('disconnect', () => {

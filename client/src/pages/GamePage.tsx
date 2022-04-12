@@ -37,10 +37,11 @@ const GamePage = () => {
       socket.on('onPlayerRefreshed', (users) => {
         setPlayerList(users);
       });
+
+      return () => {
+        socket.off('onPlayerRefreshed');
+      };
     }
-    return () => {
-      socket.off('onPlayerRefreshed');
-    };
   }, [socket]);
 
   useEffect(() => {
@@ -53,6 +54,18 @@ const GamePage = () => {
       };
     }
   }, [socket, roomId]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('onMasterLeftRoom', () => {
+        navigate('/', { replace: true });
+      });
+
+      return () => {
+        socket.off('onMasterLeftRoom');
+      };
+    }
+  }, [socket, navigate]);
 
   if (isLoading) return null;
 
