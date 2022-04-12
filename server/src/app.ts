@@ -132,7 +132,17 @@ io.on('connection', (socket) => {
     }
 
 
+    // console.log('--- before ---');
+    // console.log(io.sockets.adapter.rooms.get(roomId));
+    // console.log(socketsInRoom);
+    // console.log(usersInRoom);
     if (room.master.uuid === uuid) {
+      room.users.forEach((user) => {
+        if (user) {
+          usersInRoom.delete(user.uuid);
+        }
+      });
+      io.sockets.adapter.rooms.get(roomId)?.forEach((socketId) => socketsInRoom.delete(socketId));
       rooms.delete(roomId);
 
       socket.to(roomId).emit('onMasterLeftRoom'); // 방장 빼고 emit
@@ -143,8 +153,14 @@ io.on('connection', (socket) => {
       if (userIdx >= 0) {
         room.users[userIdx] = null;
       }
+      usersInRoom.delete(uuid);
+      socketsInRoom.delete(socket.id);
       io.to(roomId).emit('onPlayerRefreshed', room.users);
     }
+    // console.log('--- after ---');
+    // console.log(io.sockets.adapter.rooms.get(roomId));
+    // console.log(socketsInRoom);
+    // console.log(usersInRoom);
   });
 
   socket.on('disconnect', () => {
