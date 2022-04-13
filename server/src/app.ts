@@ -192,7 +192,8 @@ io.on('connection', (socket) => {
       title,
       users: Array.from({ length: 6 }, () => null),
       roomId,
-      master: { name: createdBy, uuid }
+      master: { name: createdBy, uuid },
+      state: 'ready'
     };
     room.users[0] = { name: createdBy, uuid, isMaster: true, answerCnt: 0 };
     rooms.set(roomId, room);
@@ -207,13 +208,65 @@ io.on('connection', (socket) => {
     socket.emit('onRoomListRefreshed', Array.from(rooms.values()));
   });
 
-  // 라운드 시작
-  socket.on('roundStart', () => {
-    socket.emit('onRoundStart');
+  // 게임 시작
+  socket.on('gameStart', ({ roomId }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+      return;
+    }
+    room.state = 'interval';
+    io.to(roomId).emit('onGameStart', room);
   });
 
-  socket.on('roundEnd', () => {
-    socket.emit('onRoundEnd');
+  // 라운드 시작
+  socket.on('roundStart', ({ roomId }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+      return;
+    }
+
+    // 다음 턴 유저 결정
+    let nextTurnDecided = false;
+    let nextTurnIdx = room.turn ? (room.turn.idx + 1) % 6 : 0;
+    for (let i = nextTurnIdx; i < 6; i++) {
+      if (room.users[i] !== null) {
+        nextTurnIdx = i;
+        nextTurnDecided = true;
+        break;
+      }
+    }
+    if (!nextTurnDecided) {
+      for (let i = 0; i < nextTurnIdx; i++) {
+        if (room.users[i] !== null) {
+          nextTurnIdx = i;
+          break;
+        }
+      }
+    }
+
+    const nextUser = room.users[nextTurnIdx];
+    if (nextUser) {
+      room.state = 'play';
+      room.currentRound = room.currentRound ? room.currentRound + 1 : 0;
+      room.turn = { name: nextUser?.name, uuid: nextUser?.uuid, idx: nextTurnIdx };
+
+      io.to(roomId).emit('onRoundStart', room);
+    }
+  });
+
+  socket.on('roundEnd', ({ roomId, uuid }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+      return;
+    }
+    room.state = 'interval';
+
+    if (uuid === room.master.uuid) {
+      io.to(roomId).emit('onRoundEnd', room);
+    }
   });
 });
 

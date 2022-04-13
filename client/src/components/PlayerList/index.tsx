@@ -16,13 +16,14 @@ const Container = styled.div`
 
 interface PlayerListProps {
   listItem: (Player | null)[];
+  turnIndex?: number;
 }
 
-const PlayerList = ({ listItem }: PlayerListProps) => {
+const PlayerList = ({ listItem, turnIndex }: PlayerListProps) => {
   return (
     <Container>
       {listItem.map((item, idx) => (
-        <PlayerItem key={item?.uuid ?? `pi${idx}`} item={item} />
+        <PlayerItem key={item?.uuid ?? `pi${idx}`} item={item} turnHighlight={turnIndex === idx} />
       ))}
     </Container>
   );

@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { SocketContext } from 'context/socket';
+import { getUser } from 'helpers/authUtil';
 
 const Container = styled.div`
   width: 160px;
@@ -26,9 +27,10 @@ enum TimerState {
 
 interface TimerProps {
   playTime: number;
+  roomId: string;
 }
 
-const Timer = ({ playTime }: TimerProps) => {
+const Timer = ({ playTime, roomId }: TimerProps) => {
   const [state, setState] = useState<TimerState>(TimerState.END);
   const [remainSec, setRemainSec] = useState<number>(0);
   const [m, s] = [Math.floor(remainSec / 60), remainSec % 60];
@@ -66,7 +68,11 @@ const Timer = ({ playTime }: TimerProps) => {
 
   if (state === TimerState.START && remainSec === 0) {
     setState(TimerState.END);
-    socket.emit('roundEnd');
+
+    const [playerName, uuid] = getUser();
+    // 이렇게 하면 안되고 그냥 전역으로 관리하던지 방식을 바꾸자
+    // (모든 유저들이 끝났음을 알릴 때 방장이 emit하던지)
+    socket.emit('roundEnd', { roomId, uuid });
   }
 
   return (

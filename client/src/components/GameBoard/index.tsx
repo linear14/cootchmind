@@ -11,7 +11,11 @@ const Container = styled.div`
   border: 1px solid black;
 `;
 
-const GameBoard = () => {
+interface GameBoardProps {
+  roomId?: string;
+}
+
+const GameBoard = ({ roomId }: GameBoardProps) => {
   const [canvasWidth, setCanvasWidth] = useState<number>();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -27,7 +31,7 @@ const GameBoard = () => {
 
   return (
     <Container ref={boardRef}>
-      <Timer playTime={10} />
+      {roomId && <Timer playTime={10} roomId={roomId} />}
       <SketchBook canvasWidth={canvasWidth} ref={canvasRef} />
       <Palette canvasRef={canvasRef} />
       <AnswerInput />

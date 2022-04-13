@@ -1,19 +1,28 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import { Player } from 'types/player';
 
-const Container = styled.div`
+const Container = styled.div<{ highlight: boolean }>`
   width: 100%;
   height: calc(50% / 3);
-  border: 1px solid black;
+
+  ${({ highlight }) =>
+    highlight
+      ? css`
+          border: 2px solid red;
+        `
+      : css`
+          border: 1px solid black;
+        `}
 `;
 
 interface PlayerItemProps {
   item: Player | null;
+  turnHighlight: boolean;
 }
 
-const PlayerItem = ({ item }: PlayerItemProps) => {
-  return <Container>{item && item.name}</Container>;
+const PlayerItem = ({ item, turnHighlight }: PlayerItemProps) => {
+  return <Container highlight={turnHighlight}>{item && item.name}</Container>;
 };
 
 export default PlayerItem;

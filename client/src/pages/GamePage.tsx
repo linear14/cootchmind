@@ -45,8 +45,34 @@ const GamePage = () => {
 
   const isGameAvailable = useCallback(() => {
     if (!room) return false;
-    return room.master.uuid === uuid && room.users.filter((user) => user !== null).length >= 2;
+    return (
+      room.state === 'ready' &&
+      room.master.uuid === uuid &&
+      room.users.filter((user) => user !== null).length >= 2
+    );
   }, [room, uuid]);
+
+  const startGame = useCallback(() => {
+    if (socket && roomId) {
+      socket.emit('gameStart', { roomId });
+    }
+  }, [socket, roomId]);
+
+  const getTurnIndex = useCallback(
+    (indices: number[]): number | undefined => {
+      if (!room || !room.turn) {
+        return undefined;
+      }
+
+      for (let i = 0; i < indices.length; i++) {
+        if (room.turn.idx === indices[i]) {
+          return i;
+        }
+      }
+      return undefined;
+    },
+    [room]
+  );
 
   useEffect(() => {
     if (!playerName || !uuid) {
@@ -72,9 +98,14 @@ const GamePage = () => {
         setRoom(room);
       });
 
+      socket.on('onRoundStart', (room) => {
+        setRoom(room);
+      });
+
       return () => {
         socket.off('onPlayerRefreshed');
         socket.off('onEnteredGameRoom');
+        socket.off('onRoundStart');
       };
     }
   }, [socket]);
@@ -88,6 +119,34 @@ const GamePage = () => {
       };
     }
   }, [socket, roomId, playerName, uuid]);
+
+  useEffect(() => {
+    if (socket && uuid && roomId) {
+      socket.on('onGameStart', (room: Room) => {
+        setRoom(room);
+
+        // 원래는 시작 전 출제자를 보여주기를 요청하는 socket이 필요함 (prepareRound)
+        if (room.master.uuid === uuid) {
+          socket.emit('roundStart', { roomId });
+        }
+      });
+
+      socket.on('onRoundEnd', (room: Room) => {
+        setRoom(room);
+
+        if (room.master.uuid === uuid) {
+          setTimeout(() => {
+            socket.emit('roundStart', { roomId });
+          }, 3000);
+        }
+      });
+
+      return () => {
+        socket.off('onGameStart');
+        socket.off('onRoundEnd');
+      };
+    }
+  }, [socket, uuid, roomId]);
 
   useEffect(() => {
     if (socket) {
@@ -105,10 +164,20 @@ const GamePage = () => {
 
   return (
     <Container>
-      {room && <PlayerList listItem={[room.users[0], room.users[2], room.users[4]]} />}
-      <GameBoard />
-      {isGameAvailable() && <GameStartButton />}
-      {room && <PlayerList listItem={[room.users[1], room.users[3], room.users[5]]} />}
+      {room && (
+        <PlayerList
+          listItem={[room.users[0], room.users[2], room.users[4]]}
+          turnIndex={room.state === 'play' && room.turn ? getTurnIndex([0, 2, 4]) : undefined}
+        />
+      )}
+      <GameBoard roomId={roomId} />
+      {isGameAvailable() && <GameStartButton onClick={startGame} />}
+      {room && (
+        <PlayerList
+          listItem={[room.users[1], room.users[3], room.users[5]]}
+          turnIndex={room.state === 'play' && room.turn ? getTurnIndex([1, 3, 5]) : undefined}
+        />
+      )}
     </Container>
   );
 };
