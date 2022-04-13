@@ -27,7 +27,7 @@ const GameBoard = () => {
 
   return (
     <Container ref={boardRef}>
-      <Timer />
+      <Timer playTime={10} />
       <SketchBook canvasWidth={canvasWidth} ref={canvasRef} />
       <Palette canvasRef={canvasRef} />
       <AnswerInput />

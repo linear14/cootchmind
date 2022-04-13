@@ -206,6 +206,15 @@ io.on('connection', (socket) => {
   socket.on('refreshRoomList', () => {
     socket.emit('onRoomListRefreshed', Array.from(rooms.values()));
   });
+
+  // 라운드 시작
+  socket.on('roundStart', () => {
+    socket.emit('onRoundStart');
+  });
+
+  socket.on('roundEnd', () => {
+    socket.emit('onRoundEnd');
+  });
 });
 
 server.listen('4000', () => {
