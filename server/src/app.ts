@@ -121,6 +121,7 @@ io.on('connection', (socket) => {
       return;
     }
     socket.join(roomId);
+    socket.emit('onEnteredGameRoom', room);
     io.to(roomId).emit('onPlayerRefreshed', room.users);
   });
 

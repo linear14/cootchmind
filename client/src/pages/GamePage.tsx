@@ -1,12 +1,12 @@
 import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useMemo, useCallback } from 'react';
 
 import GameBoard from 'components/GameBoard';
 import PlayerList from 'components/PlayerList';
 import { getUser } from 'helpers/authUtil';
 import { SocketContext } from 'context/socket';
-import { Player } from 'types/player';
+import { Room } from 'types/room';
 
 const Container = styled.div`
   width: 100%;
@@ -16,36 +16,70 @@ const Container = styled.div`
   display: flex;
 `;
 
+const GameStartButton = styled.div`
+  position: absolute;
+  width: 240px;
+  height: 48px;
+  line-height: 48px;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+
+  text-align: center;
+  border: 1px solid black;
+  cursor: pointer;
+
+  &::after {
+    content: '게임 시작하기';
+  }
+`;
+
+// useMemo쓰면 uuid가 고정 아닐까?
 const GamePage = () => {
   const [isLoading, setLoading] = useState(true);
-  const [playerList, setPlayerList] = useState<(Player | null)[]>([]);
+  const [room, setRoom] = useState<Room>();
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
   const { roomId } = useParams();
+  const [playerName, uuid] = useMemo(() => getUser(), []);
+
+  const isGameAvailable = useCallback(() => {
+    if (!room) return false;
+    return room.master.uuid === uuid && room.users.filter((user) => user !== null).length >= 2;
+  }, [room, uuid]);
 
   useEffect(() => {
-    const [playerName, uuid] = getUser();
     if (!playerName || !uuid) {
       navigate('/login', { replace: true });
       return;
     }
     setLoading(false);
-  }, [navigate]);
+  }, [navigate, playerName, uuid]);
 
   useEffect(() => {
     if (socket) {
       socket.on('onPlayerRefreshed', (users) => {
-        setPlayerList(users);
+        setRoom((prev) => {
+          if (prev) {
+            return { ...prev, users };
+          } else {
+            return prev;
+          }
+        });
+      });
+
+      socket.on('onEnteredGameRoom', (room) => {
+        setRoom(room);
       });
 
       return () => {
         socket.off('onPlayerRefreshed');
+        socket.off('onEnteredGameRoom');
       };
     }
   }, [socket]);
 
   useEffect(() => {
-    const [playerName, uuid] = getUser();
     if (socket && roomId && playerName && uuid) {
       socket.emit('enterGameRoom', { roomId, playerName, uuid });
 
@@ -53,7 +87,7 @@ const GamePage = () => {
         socket.emit('leaveGameRoom', { roomId, playerName, uuid });
       };
     }
-  }, [socket, roomId]);
+  }, [socket, roomId, playerName, uuid]);
 
   useEffect(() => {
     if (socket) {
@@ -71,9 +105,10 @@ const GamePage = () => {
 
   return (
     <Container>
-      <PlayerList listItem={[playerList[0], playerList[2], playerList[4]]} />
+      {room && <PlayerList listItem={[room.users[0], room.users[2], room.users[4]]} />}
       <GameBoard />
-      <PlayerList listItem={[playerList[1], playerList[3], playerList[5]]} />
+      {isGameAvailable() && <GameStartButton />}
+      {room && <PlayerList listItem={[room.users[1], room.users[3], room.users[5]]} />}
     </Container>
   );
 };

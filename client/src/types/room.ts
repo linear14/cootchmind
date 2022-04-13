@@ -1,6 +1,8 @@
+import { Player } from './player';
+
 export interface Room {
   roomId: string;
   title: string;
-  users: { name: string; uuid: string; isMaster: boolean }[];
+  users: (Player | null)[];
   master: { name: string; uuid: string };
 }
