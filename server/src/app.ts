@@ -3,6 +3,8 @@ import http from 'http';
 import { Server } from 'socket.io';
 import { Room } from 'types/room';
 import { countLog } from './helpers/logUtil';
+import { quizItemList } from './data/quiz';
+import { getQuizIndices } from './helpers/gameUtil';
 
 const app = express();
 const server = http.createServer(app);
@@ -193,6 +195,7 @@ io.on('connection', (socket) => {
       users: Array.from({ length: 6 }, () => null),
       roomId,
       master: { name: createdBy, uuid },
+      quizIndices: getQuizIndices(quizItemList.length),
       state: 'ready'
     };
     room.users[0] = { name: createdBy, uuid, isMaster: true, answerCnt: 0 };
