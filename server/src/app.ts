@@ -1,6 +1,6 @@
 import express from 'express';
 import http from 'http';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { Room } from 'types/room';
 import { quizItemList } from './data/quiz';
 import { getQuizIndices } from './helpers/gameUtil';
@@ -262,14 +262,38 @@ io.on('connection', (socket) => {
   // 16. 사용자 추방
   socket.on('kickUser', () => {});
 
-  // 17. disconnect
+  // 17. disconnect - 완료
   socket.on('disconnect', () => {
     const uuid = socketToUUID.get(socket.id);
+    const roomIdOfSocket = socketToRoomId.get(socket.id);
+
+    // 게임 중에 접속을 종료했다.
+    if (uuid && roomIdOfSocket) {
+      const room = rooms.get(roomIdOfSocket);
+
+      // 방장인 경우
+      if (room) {
+        if (room.master.uuid === uuid) {
+          rooms.delete(room.roomId);
+          socket.to(room.roomId).emit('onMasterLeftRoom');
+          io.socketsLeave(room.roomId);
+        }
+        // 방장이 아닌경우
+        else {
+          const userIdx = room.users.findIndex((user) => user?.uuid === uuid);
+          if (userIdx >= 0) {
+            room.users[userIdx] = null;
+          }
+          io.to(room.roomId).emit('onPlayerRefreshed', room.users);
+        }
+      }
+    }
+
     if (uuid) {
       removeSession(socket.id, uuid);
     }
-    socketToRoomId.delete(socket.id);
     socketToUUID.delete(socket.id);
+    socketToRoomId.delete(socket.id);
   });
 });
 
