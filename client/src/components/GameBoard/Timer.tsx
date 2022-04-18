@@ -6,7 +6,7 @@ import { getUser } from 'helpers/authUtil';
 
 const Container = styled.div`
   width: 160px;
-  height: 54px;
+  height: 48px;
   line-height: 24px;
   border: 1px solid black;
   background-color: white;
