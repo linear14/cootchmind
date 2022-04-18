@@ -1,7 +1,9 @@
+import { User } from './user';
+
 export interface Room {
   roomId: string;
   title: string;
-  users: ({ name: string; uuid: string; isMaster: boolean; answerCnt: number } | null)[];
+  users: (User | null)[];
   master: { name: string; uuid: string };
   turn?: { name: string; uuid: string; idx: number };
   quizIndices: number[];
