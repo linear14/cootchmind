@@ -7,7 +7,8 @@ export interface Room {
   master: { name: string; uuid: string };
   turn?: { name: string; uuid: string; idx: number };
   quizIndices: number[];
-  currentRound?: number;
+  currentRound: number;
+  kickedUserUUIDList: string[];
   state: GameState;
 }
 

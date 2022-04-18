@@ -13,10 +13,10 @@ const io = new Server(server, {
   }
 });
 
+const CHAT_CHANNEL = 'chat_channel';
 const rooms = new Map<string, Room>();
 const socketToUUID = new Map<string, string | undefined>(); // socketId - uuid, undefined
 const UUIDToSocketList = new Map<string, string[]>(); // uuid - socketId[]
-const loggedInUUIDSet = new Set<string>(); // uuid
 const uuidToRoomId = new Map<string, string>(); // uuid - roomId
 const socketToRoomId = new Map<string, string>(); // socketId - roomId
 
@@ -25,7 +25,6 @@ const removeSession = (socketId: string, uuid: string) => {
   if (currentSession) {
     if (currentSession.length <= 1) {
       UUIDToSocketList.delete(uuid);
-      loggedInUUIDSet.delete(uuid);
       uuidToRoomId.delete(uuid);
       socketToRoomId.delete(socketId);
     } else {
@@ -46,7 +45,7 @@ io.on('connection', (socket) => {
   // 1. 비정상 접근
   socket.on('initUserState', () => {});
 
-  // 2. 사용자 정보 저장
+  // 2. 사용자 정보 저장 - 완료
   socket.on('saveUser', (uuid) => {
     if (socketToUUID.get(socket.id) === uuid) return;
     if (uuid) {
@@ -54,27 +53,35 @@ io.on('connection', (socket) => {
 
       const socketList = UUIDToSocketList.get(uuid) ?? [];
       UUIDToSocketList.set(uuid, socketList.concat(socket.id));
-      loggedInUUIDSet.add(uuid);
+      socket.join(CHAT_CHANNEL);
     }
   });
 
-  // 3. 대기실 채팅
-  socket.on('chat', (chat) => {
-    io.emit('onChatReceived', chat);
+  // 3. 대기실 채팅 - 완료
+  socket.on('chat', ({ playerName, message }) => {
+    io.to(CHAT_CHANNEL).emit('onChat', { playerName, message });
   });
 
-  // 4. 방 생성
-  socket.on('createRoom', ({ title, createdBy, uuid }) => {
+  // 4. 방 생성 - 완료
+  socket.on('createRoom', ({ uuid, playerName, title }) => {
+    if (uuidToRoomId.get(uuid)) {
+      socket.emit('onError', { message: '이미 접속중인 방이 존재합니다.' });
+      return;
+    }
+
     const roomId = Date.now().toString();
     const room: Room = {
+      roomId,
       title,
       users: Array.from({ length: 6 }, () => null),
-      roomId,
-      master: { name: createdBy, uuid },
-      quizIndices: getQuizIndices(quizItemList.length),
+      master: { name: playerName, uuid },
+      quizIndices: [],
+      currentRound: 0,
+      kickedUserUUIDList: [],
       state: 'ready'
     };
-    room.users[0] = { name: createdBy, uuid, isMaster: true, answerCnt: 0 };
+
+    room.users[0] = { name: playerName, uuid, isMaster: true, answerCnt: 0 };
     rooms.set(roomId, room);
 
     uuidToRoomId.set(uuid, roomId);
@@ -82,9 +89,18 @@ io.on('connection', (socket) => {
     socket.emit('onRoomGenerated', roomId);
   });
 
-  // 5. 방 조회
+  // 5. 방 조회 - 완료
   socket.on('refreshRoomList', () => {
-    socket.emit('onRoomListRefreshed', Array.from(rooms.values()));
+    const currentRoom = Array.from(rooms.values());
+    const parsedRoom = currentRoom.map((room) => ({
+      roomId: room.roomId,
+      title: room.title,
+      masterName: room.master.name,
+      currentRound: room.currentRound,
+      state: room.state,
+      kickedUserUUIDList: room.kickedUserUUIDList
+    }));
+    socket.emit('onRoomListRefreshed', parsedRoom);
   });
 
   // 6. 방 입장 시도
@@ -107,7 +123,6 @@ io.on('connection', (socket) => {
     if (!uuid || uuid !== clientUUID) {
       if (uuid) {
         removeSession(socket.id, uuid);
-        loggedInUUIDSet.delete(uuid);
         uuidToRoomId.delete(uuid);
       }
       socketToUUID.set(socket.id, undefined);
