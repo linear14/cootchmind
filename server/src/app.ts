@@ -103,34 +103,18 @@ io.on('connection', (socket) => {
     socket.emit('onRoomListRefreshed', parsedRoom);
   });
 
-  // 6. 방 입장 시도
-  socket.on('tryEnterRoom', ({ roomId, playerName, clientUUID }) => {
+  // 6. 방 입장 시도 - 완료
+  socket.on('tryEnterRoom', ({ uuid, playerName, roomId }) => {
     // 게임 방이 존재하는지
     const room = rooms.get(roomId);
     if (!room) {
-      socket.emit('onError', { message: '해당 방이 존재하지 않습니다.' });
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
       return;
     }
 
     // 게임 방의 인원수가 가득 차있는지
     if (room.users.filter((user) => user === null).length === 0) {
       socket.emit('onError', { message: '이미 가득 찬 방입니다.' });
-      return;
-    }
-
-    // 사용자의 uuid가 위조되지 않았는지
-    const uuid = socketToUUID.get(socket.id);
-    if (!uuid || uuid !== clientUUID) {
-      if (uuid) {
-        removeSession(socket.id, uuid);
-        uuidToRoomId.delete(uuid);
-      }
-      socketToUUID.set(socket.id, undefined);
-
-      socket.emit('onError', {
-        message: '사용자 정보 위변조가 감지되었습니다. 닉네임 설정창으로 돌아갑니다.',
-        closeConnection: true
-      });
       return;
     }
 
@@ -151,58 +135,68 @@ io.on('connection', (socket) => {
         answerCnt: 0
       };
     }
-    socket.emit('onSuccessRoomConnection', roomId);
+    socket.emit('onRoomJoined', roomId);
   });
 
-  // 7. 방 입장 (url로 직접 접근 시 오류)
-  socket.on('enterRoom', ({ roomId, uuid }) => {
-    const room = rooms.get(roomId);
-    if (!room) {
-      socket.emit('onError', { message: '존재하지 않는 방입니다. ' });
-      return;
-    }
-    if (!uuidToRoomId.has(uuid)) {
+  // 7. 방 입장 - 완료
+  socket.on('enterRoom', ({ uuid, roomId }) => {
+    if (!uuidToRoomId.has(uuid) || !socketToRoomId.has(socket.id)) {
       socket.emit('onError', { message: '정상적인 경로로 입장해주세요.' });
       return;
     }
+
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+      return;
+    }
+
     socket.join(roomId);
-    socket.emit('onEnteredGameRoom', room);
-    io.to(roomId).emit('onPlayerRefreshed', room.users);
+    socket.emit('onRoomEntered', {
+      roomId: room.roomId,
+      title: room.title,
+      users: room.users,
+      currentRound: room.currentRound,
+      state: room.state,
+      turn: room.turn
+    }); // 받으면 클라이언트에서 알아서 잘 쓰기
+    socket.to(roomId).emit('onPlayerRefreshed', room.users);
+    socket.leave(CHAT_CHANNEL);
   });
 
-  // 8. 방 퇴장
-  socket.on('leaveRoom', ({ roomId, uuid }) => {
+  // 8. 방 퇴장 - 완료
+  socket.on('leaveRoom', ({ uuid, roomId }) => {
+    socket.leave(roomId);
+    uuidToRoomId.delete(uuid);
+    socketToRoomId.delete(socket.id);
+    socket.join(CHAT_CHANNEL);
+
     const room = rooms.get(roomId);
     if (!room) {
       socket.emit('onError', { message: '방장이 방을 폭파했습니다.' });
       return;
     }
 
-    if (room.master.uuid === uuid) {
-      room.users.forEach((user) => {
-        if (user) {
-          uuidToRoomId.delete(user.uuid);
-        }
-      });
-      io.sockets.adapter.rooms.get(roomId)?.forEach((socketId) => socketToRoomId.delete(socketId));
+    const userIdx = room.users.findIndex((user) => user?.uuid === uuid);
+    if (userIdx >= 0) {
+      room.users[userIdx] = null;
+    }
+    io.to(roomId).emit('onPlayerRefreshed', room.users);
+  });
+
+  // 9. 방 폭파 - 완료
+  socket.on('deleteRoom', ({ uuid, roomId }) => {
+    const room = rooms.get(roomId);
+    if (room && room.master.uuid === uuid) {
       rooms.delete(roomId);
+      uuidToRoomId.delete(uuid);
+      socketToRoomId.delete(socket.id);
+      socket.join(CHAT_CHANNEL);
 
       socket.to(roomId).emit('onMasterLeftRoom'); // 방장 빼고 emit
       io.socketsLeave(roomId);
-    } else {
-      socket.leave(roomId);
-      const userIdx = room.users.findIndex((user) => user?.uuid === uuid);
-      if (userIdx >= 0) {
-        room.users[userIdx] = null;
-      }
-      uuidToRoomId.delete(uuid);
-      socketToRoomId.delete(socket.id);
-      io.to(roomId).emit('onPlayerRefreshed', room.users);
     }
   });
-
-  // 9. 방 폭파
-  socket.on('deleteRoom', () => {});
 
   // 10. 게임 시작
   socket.on('startGame', ({ roomId }) => {
