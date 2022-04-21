@@ -198,7 +198,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 10. 게임 시작
+  // 10. 게임 시작 - 완료
   socket.on('startGame', ({ roomId }) => {
     const room = rooms.get(roomId);
     if (!room) {
@@ -206,10 +206,10 @@ io.on('connection', (socket) => {
       return;
     }
     room.state = 'interval';
-    io.to(roomId).emit('onGameStart', room);
+    io.to(roomId).emit('onGameStarted', room);
   });
 
-  // 11. 라운드 시작
+  // 11. 라운드 시작 - 완료
   socket.on('startRound', ({ roomId }) => {
     const room = rooms.get(roomId);
     if (!room) {
@@ -239,11 +239,26 @@ io.on('connection', (socket) => {
     const nextUser = room.users[nextTurnIdx];
     if (nextUser) {
       room.state = 'play';
-      room.currentRound = room.currentRound ? room.currentRound + 1 : 0;
-      room.turn = { name: nextUser?.name, uuid: nextUser?.uuid, idx: nextTurnIdx };
+      room.currentRound = room.currentRound + 1;
+      room.turn = { name: nextUser.name, uuid: nextUser.uuid, idx: nextTurnIdx };
 
-      const answer = quizItemList[room.quizIndices[room.currentRound]].answer;
-      io.to(roomId).emit('onRoundStart', { room, answer });
+      const nextUserUUID = nextUser.uuid;
+      const nextUserSocketList = UUIDToSocketList.get(nextUserUUID);
+      const nextUserSocketId = nextUserSocketList?.find(
+        (socketId) => socketToRoomId.get(socketId) === roomId
+      );
+      const answer = quizItemList[room.quizIndices[room.currentRound - 1]].answer;
+
+      if (nextUserSocketId) {
+        io.to(nextUserSocketId).emit('onRoundStarted', { turn: room.turn, answer });
+        io.to(roomId).except(nextUserSocketId).emit('onRoundStarted', { turn: room.turn });
+      } else {
+        io.to(roomId).emit('onError', { message: '플레이어 정보가 소멸되었습니다.' });
+        return;
+      }
+    } else {
+      io.to(roomId).emit('onError', { message: '플레이어가 존재하지 않습니다.' });
+      return;
     }
   });
 
