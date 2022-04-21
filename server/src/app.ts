@@ -103,6 +103,7 @@ io.on('connection', (socket) => {
     socket.emit('onRoomListRefreshed', parsedRoom);
   });
 
+  // 추가 필요: 게임 진행중인 방은 입장할 수 없도록
   // 6. 방 입장 시도 - 완료
   socket.on('tryEnterRoom', ({ uuid, playerName, roomId }) => {
     // 게임 방이 존재하는지
@@ -198,6 +199,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  // 추가 필요: 모든 사용자가 준비 완료 되었을 때 시작 가능하도록
   // 10. 게임 시작 - 완료
   socket.on('startGame', ({ roomId }) => {
     const room = rooms.get(roomId);
@@ -206,9 +208,11 @@ io.on('connection', (socket) => {
       return;
     }
     room.state = 'interval';
+    room.quizIndices = getQuizIndices(quizItemList.length);
     io.to(roomId).emit('onGameStarted', room);
   });
 
+  // 추가 필요: 모든 플레이어의 ready 신호가 떨어지면 시작할 수 있도록
   // 11. 라운드 시작 - 완료
   socket.on('startRound', ({ roomId }) => {
     const room = rooms.get(roomId);
@@ -262,11 +266,40 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 12. 정답 전송
-  socket.on('submitAnswer', () => {});
+  // 12. 정답 전송 - 완료
+  socket.on('submitAnswer', ({ uuid, roomId, message }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+      return;
+    }
 
-  // 13. 게임 내 채팅
-  socket.on('chatInGame', () => {});
+    io.to(roomId).emit('onChatInGame', { uuid, message });
+
+    if (room.state === 'play') {
+      const currentRound = room.currentRound;
+      const answer = quizItemList[room.quizIndices[currentRound - 1]];
+
+      if (answer === message) {
+        const user = room.users.find((user) => user?.uuid === uuid);
+        if (user && user !== null) {
+          user.answerCnt++;
+        }
+        room.state = 'interval';
+        io.to(roomId).emit('onRoundEnded', { answer, winPlayer: user });
+      }
+    }
+  });
+
+  // 13. 게임 내 채팅 - 완료
+  socket.on('chatInGame', ({ uuid, roomId, message }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+      return;
+    }
+    io.to(roomId).emit('onChatInGame', { uuid, message });
+  });
 
   // 14. 그림 데이터 전송
   socket.on('submitPaint', () => {});
