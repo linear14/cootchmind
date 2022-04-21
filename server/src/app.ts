@@ -1,6 +1,6 @@
 import express from 'express';
 import http from 'http';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { Room } from 'types/room';
 import { quizItemList } from './data/quiz';
 import { getQuizIndices } from './helpers/gameUtil';
@@ -46,7 +46,7 @@ io.on('connection', (socket) => {
   socket.on('initUserState', () => {});
 
   // 2. 사용자 정보 저장 - 완료
-  socket.on('saveUser', (uuid) => {
+  socket.on('saveUser', ({ uuid }) => {
     if (socketToUUID.get(socket.id) === uuid) return;
     if (uuid) {
       socketToUUID.set(socket.id, uuid);
@@ -301,14 +301,65 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('onChatInGame', { uuid, message });
   });
 
-  // 14. 그림 데이터 전송
-  socket.on('submitPaint', () => {});
+  // 14. 그림 데이터 전송 - 완료
+  socket.on('submitPaint', ({ uuid, roomId, pointList }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+      return;
+    }
 
-  // 15. 게임 종료
-  socket.on('endGame', () => {});
+    if (room.turn?.uuid !== uuid) {
+      return;
+    }
 
-  // 16. 사용자 추방
-  socket.on('kickUser', () => {});
+    if (room.state !== 'play') {
+      return;
+    }
+
+    io.to(roomId).emit('onDraw', pointList);
+  });
+
+  // 추가 필요: 모든 플레이어의 ready 신호가 떨어지면 게임이 종료되도록
+  // 15. 게임 종료 - 완료
+  socket.on('endGame', ({ roomId }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+      return;
+    }
+
+    room.state === 'ready';
+    for (let i = 0; i < 6; i++) {
+      const user = room.users[i];
+      if (user !== null) {
+        user.answerCnt = 0;
+      }
+    }
+    room.quizIndices = [];
+    room.currentRound = 0;
+
+    io.to(roomId).emit('onGameEnded');
+  });
+
+  // 16. 사용자 추방 - 완료
+  socket.on('kickUser', ({ roomId, kicekdUUID }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+      return;
+    }
+
+    const kickedUserSocketList = UUIDToSocketList.get(kicekdUUID);
+    const kickedUserSocketId = kickedUserSocketList?.find(
+      (socketId) => socketToRoomId.get(socketId) === roomId
+    );
+
+    if (kickedUserSocketId) {
+      room.kickedUserUUIDList.push(kicekdUUID);
+      io.to(kickedUserSocketId).emit('onKicked');
+    }
+  });
 
   // 17. disconnect - 완료
   socket.on('disconnect', () => {
