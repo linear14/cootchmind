@@ -7,8 +7,10 @@ import ChatRegion from 'components/ChatRegion';
 import RoomList from 'components/RoomList';
 import RoomGeneratorModal from 'components/ui/RoomGeneratorModal';
 import { Room } from 'types/room';
-import { getUser } from 'helpers/authUtil';
+import { getLocalStorageUser } from 'helpers/authUtil';
 import ErrorModal from 'components/ui/ErrorModal';
+import { UserContext } from 'context/user';
+import useCheckValidUser from 'helpers/useCheckValidUser';
 
 const Container = styled.div`
   width: 100%;
@@ -62,21 +64,22 @@ interface SocketError {
 }
 
 const RoomListPage = () => {
-  const [playerName, setPlayerName] = useState<string>();
+  const { uuid, playerName, setUser } = useContext(UserContext);
   const [roomList, setRoomList] = useState<Room[]>([]);
   const [roomModal, setRoomModal] = useState<boolean>(false);
   const [error, setError] = useState<SocketError | null>(null);
   const navigate = useNavigate();
   const socket = useContext(SocketContext);
+  const check = useCheckValidUser();
 
-  const generateRoom = (title?: string) => {
-    const [playerName, uuid] = getUser();
-    if (socket && title && playerName && uuid) {
-      socket.emit('generateRoom', { title, createdBy: playerName, uuid });
-    } else {
-      // 예외 처리
-    }
-  };
+  const createRoom = useCallback(
+    (title?: string) => {
+      if (check() && socket && title && uuid && playerName) {
+        socket.emit('createRoom', { uuid, playerName, title });
+      }
+    },
+    [socket, check, uuid, playerName]
+  );
 
   const handleRoomModal = () => {
     setRoomModal((prev) => !prev);
@@ -88,14 +91,22 @@ const RoomListPage = () => {
     }
   }, [socket]);
 
+  /**
+   * 페이지 접근 시 로그인 상태 확인
+   * 1. 로그인 안되어 있는 경우 -> login 페이지로 이동
+   * 2. 로그인 되어있는 경우 -> 서버에 로그인 uuid 저장 및 클라이언트 회원정보 저장
+   **/
   useEffect(() => {
-    const [playerName, uuid] = getUser();
-    if (!playerName || !uuid) {
+    const { uuid: localStorageUUID, playerName: localStoragePN } = getLocalStorageUser();
+    if (!localStorageUUID || !localStoragePN) {
       navigate('/login', { replace: true });
       return;
     }
-    setPlayerName(playerName);
-  }, [navigate]);
+    if (uuid !== localStorageUUID && playerName !== localStoragePN) {
+      socket.emit('saveUser', { uuid });
+      setUser({ uuid: localStorageUUID, playerName: localStoragePN });
+    }
+  }, [navigate, setUser, socket, uuid, playerName]);
 
   useEffect(() => {
     socket.on('onRoomGenerated', (roomId: number) => {
@@ -148,13 +159,6 @@ const RoomListPage = () => {
     }
   }, [socket, refreshRoomList]);
 
-  useEffect(() => {
-    const [playerName, uuid] = getUser();
-    if (playerName && uuid) {
-      socket.emit('saveUser', uuid);
-    }
-  }, [socket]);
-
   if (!playerName) return null;
 
   return (
@@ -168,7 +172,7 @@ const RoomListPage = () => {
         <ChatRegion />
         <RoomList listItem={roomList} />
       </Body>
-      {roomModal && <RoomGeneratorModal onGenerate={generateRoom} onClose={handleRoomModal} />}
+      {roomModal && <RoomGeneratorModal onGenerate={createRoom} onClose={handleRoomModal} />}
       {error && <ErrorModal message={error.message} onClose={error.callback} />}
     </Container>
   );

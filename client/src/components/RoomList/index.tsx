@@ -1,5 +1,6 @@
 import { SocketContext } from 'context/socket';
-import { getUser } from 'helpers/authUtil';
+import { UserContext } from 'context/user';
+import useCheckValidUser from 'helpers/useCheckValidUser';
 import { useCallback, useContext } from 'react';
 import styled from 'styled-components';
 
@@ -26,14 +27,17 @@ interface RoomListProps {
 }
 
 const RoomList = ({ listItem }: RoomListProps) => {
+  const { uuid, playerName } = useContext(UserContext);
   const socket = useContext(SocketContext);
+  const check = useCheckValidUser();
 
   const tryEnterRoom = useCallback(
     (roomId: string) => {
-      const [playerName, uuid] = getUser();
-      socket.emit('tryEnterGameRoom', { roomId, playerName, clientUUID: uuid });
+      if (check()) {
+        socket.emit('tryEnterRoom', { uuid, playerName, roomId });
+      }
     },
-    [socket]
+    [check, socket, uuid, playerName]
   );
 
   return (

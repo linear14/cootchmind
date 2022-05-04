@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { SocketContext } from 'context/socket';
 import { Chat } from 'types/chat';
 import ChatList from './ChatList';
-import { getUser } from 'helpers/authUtil';
+import { UserContext } from 'context/user';
 
 const Container = styled.div`
   width: 33%;
@@ -24,25 +24,25 @@ const ChatForm = styled.form`
 `;
 
 const ChatRegion = () => {
+  const { uuid, playerName } = useContext(UserContext);
   const [chatListItem, setChatListItems] = useState<Chat[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const socket = useContext(SocketContext);
 
+  // 채팅 보내기 (별도의 회원 정보 위조여부 검사하지 않습니다.)
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const [playerName, uuid] = getUser();
     const message = inputRef.current?.value;
 
     if (playerName && uuid && message) {
-      const newChat = { from: playerName, message };
-      socket.emit('chat', newChat);
+      socket.emit('chat', { playerName, message });
       inputRef.current.value = '';
     }
   };
 
   useEffect(() => {
-    socket.on('onChatReceived', (chat: Chat) => {
+    socket.on('onChat', (chat: Chat) => {
       setChatListItems((prev) => {
         const MAX_LIST_LENGTH = 100;
         const newListLength = prev.length + 1;
@@ -54,7 +54,7 @@ const ChatRegion = () => {
     });
 
     return () => {
-      socket.off('onChatReceived');
+      socket.off('onChat');
     };
   }, [socket]);
 

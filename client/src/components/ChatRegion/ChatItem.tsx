@@ -11,7 +11,7 @@ interface ChatProps {
 }
 
 const ChatItem = ({ item }: ChatProps) => {
-  return <Container>{`${item.from}: ${item.message}`}</Container>;
+  return <Container>{`${item.playerName}: ${item.message}`}</Container>;
 };
 
 export default ChatItem;

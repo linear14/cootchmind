@@ -4,9 +4,10 @@ import { useState, useEffect, useContext, useMemo, useCallback } from 'react';
 
 import GameBoard from 'components/GameBoard';
 import PlayerList from 'components/PlayerList';
-import { getUser } from 'helpers/authUtil';
+import { getLocalStorageUser } from 'helpers/authUtil';
 import { SocketContext } from 'context/socket';
 import { Room } from 'types/room';
+import { UserContext } from 'context/user';
 
 const Container = styled.div`
   width: 100%;
@@ -36,12 +37,12 @@ const GameStartButton = styled.div`
 
 // useMemo쓰면 uuid가 고정 아닐까?
 const GamePage = () => {
-  const [isLoading, setLoading] = useState(true);
+  const { roomId } = useParams();
   const [room, setRoom] = useState<Room>();
+  const { uuid, playerName } = useContext(UserContext);
+  const [isLoading, setLoading] = useState(true);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
-  const { roomId } = useParams();
-  const [playerName, uuid] = useMemo(() => getUser(), []);
 
   const isGameAvailable = useCallback(() => {
     if (!room) return false;
@@ -75,6 +76,7 @@ const GamePage = () => {
   );
 
   useEffect(() => {
+    const { uuid, playerName } = getLocalStorageUser();
     if (!playerName || !uuid) {
       navigate('/login', { replace: true });
       return;
@@ -98,7 +100,7 @@ const GamePage = () => {
         setRoom(room);
       });
 
-      socket.on('onRoundStart', (room) => {
+      socket.on('onRoundStart', ({ room, answer }) => {
         setRoom(room);
       });
 

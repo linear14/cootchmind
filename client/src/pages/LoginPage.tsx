@@ -1,9 +1,10 @@
 import styled from 'styled-components';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import PlayerNameInput from 'components/PlayerNameInput';
-import { getUser } from 'helpers/authUtil';
+import { getLocalStorageUser } from 'helpers/authUtil';
+import { UserContext } from 'context/user';
 
 const Container = styled.div`
   width: 100%;
@@ -16,15 +17,17 @@ const Container = styled.div`
 const LoginPage = () => {
   const [isLoading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { setUser } = useContext(UserContext);
 
   useEffect(() => {
-    const [playerName, uuid] = getUser();
+    const { playerName, uuid } = getLocalStorageUser();
     if (playerName && uuid) {
+      setUser({ uuid, playerName });
       navigate('/', { replace: true });
       return;
     }
     setLoading(false);
-  }, [navigate]);
+  }, [navigate, setUser]);
 
   if (isLoading) return null;
 

@@ -1,6 +1,6 @@
-export const getUser = () => {
+export const getLocalStorageUser = () => {
   const playerName = localStorage.getItem('player-name');
   const uuid = localStorage.getItem('uuid');
 
-  return [playerName, uuid];
+  return { playerName, uuid };
 };

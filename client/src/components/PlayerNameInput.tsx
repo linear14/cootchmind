@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { UserContext } from 'context/user';
+import { useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { v4 as uuid } from 'uuid';
@@ -29,6 +30,7 @@ const StartButton = styled.button`
 const PlayerNameInput = () => {
   const playerNameInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { setUser } = useContext(UserContext);
 
   const savePlayerName = () => {
     const playerName = playerNameInputRef.current?.value;
@@ -36,8 +38,10 @@ const PlayerNameInput = () => {
       alert('닉네임 조건 (최대 12글자)');
       return;
     }
+    const newUUID = uuid();
     localStorage.setItem('player-name', playerName);
-    localStorage.setItem('uuid', uuid());
+    localStorage.setItem('uuid', newUUID);
+    setUser({ playerName, uuid: newUUID });
     navigate('/', { replace: true });
   };
 

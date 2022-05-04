@@ -2,7 +2,6 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { SocketContext } from 'context/socket';
-import { getUser } from 'helpers/authUtil';
 
 const Container = styled.div`
   width: 160px;
@@ -69,10 +68,9 @@ const Timer = ({ playTime, roomId }: TimerProps) => {
   if (state === TimerState.START && remainSec === 0) {
     setState(TimerState.END);
 
-    const [playerName, uuid] = getUser();
-    // 이렇게 하면 안되고 그냥 전역으로 관리하던지 방식을 바꾸자
-    // (모든 유저들이 끝났음을 알릴 때 방장이 emit하던지)
-    socket.emit('roundEnd', { roomId, uuid });
+    // // 이렇게 하면 안되고 그냥 전역으로 관리하던지 방식을 바꾸자
+    // // (모든 유저들이 끝났음을 알릴 때 방장이 emit하던지)
+    // socket.emit('roundEnd', { roomId, uuid });
   }
 
   return (
