@@ -103,7 +103,7 @@ const RoomListPage = () => {
       return;
     }
     if (socket && uuid !== localStorageUUID && playerName !== localStoragePN) {
-      socket.emit('saveUser', { uuid });
+      socket.emit('saveUser', { uuid: localStorageUUID });
       setUser({ uuid: localStorageUUID, playerName: localStoragePN });
     }
   }, [navigate, setUser, socket, uuid, playerName]);

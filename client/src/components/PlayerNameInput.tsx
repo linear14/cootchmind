@@ -1,5 +1,4 @@
-import { UserContext } from 'context/user';
-import { useContext, useRef } from 'react';
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { v4 as uuid } from 'uuid';
@@ -30,7 +29,6 @@ const StartButton = styled.button`
 const PlayerNameInput = () => {
   const playerNameInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { setUser } = useContext(UserContext);
 
   const savePlayerName = () => {
     const playerName = playerNameInputRef.current?.value;
@@ -41,7 +39,6 @@ const PlayerNameInput = () => {
     const newUUID = uuid();
     localStorage.setItem('player-name', playerName);
     localStorage.setItem('uuid', newUUID);
-    setUser({ playerName, uuid: newUUID });
     navigate('/', { replace: true });
   };
 
