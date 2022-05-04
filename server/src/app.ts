@@ -86,7 +86,7 @@ io.on('connection', (socket) => {
 
     uuidToRoomId.set(uuid, roomId);
     socketToRoomId.set(socket.id, roomId);
-    socket.emit('onRoomGenerated', roomId);
+    socket.emit('onRoomCreated', roomId);
   });
 
   // 5. 방 조회 - 완료

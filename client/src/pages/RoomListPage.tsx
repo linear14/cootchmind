@@ -6,7 +6,7 @@ import { SocketContext } from 'context/socket';
 import ChatRegion from 'components/ChatRegion';
 import RoomList from 'components/RoomList';
 import RoomGeneratorModal from 'components/ui/RoomGeneratorModal';
-import { Room } from 'types/room';
+import { RoomListItem } from 'types/room';
 import { getLocalStorageUser } from 'helpers/authUtil';
 import ErrorModal from 'components/ui/ErrorModal';
 import { UserContext } from 'context/user';
@@ -65,7 +65,7 @@ interface SocketError {
 
 const RoomListPage = () => {
   const { uuid, playerName, setUser } = useContext(UserContext);
-  const [roomList, setRoomList] = useState<Room[]>([]);
+  const [roomList, setRoomList] = useState<RoomListItem[]>([]);
   const [roomModal, setRoomModal] = useState<boolean>(false);
   const [error, setError] = useState<SocketError | null>(null);
   const navigate = useNavigate();
@@ -102,49 +102,21 @@ const RoomListPage = () => {
       navigate('/login', { replace: true });
       return;
     }
-    if (uuid !== localStorageUUID && playerName !== localStoragePN) {
+    if (socket && uuid !== localStorageUUID && playerName !== localStoragePN) {
       socket.emit('saveUser', { uuid });
       setUser({ uuid: localStorageUUID, playerName: localStoragePN });
     }
   }, [navigate, setUser, socket, uuid, playerName]);
 
+  // 페이지 접근 시 방 목록 초기화
   useEffect(() => {
-    socket.on('onRoomGenerated', (roomId: number) => {
-      navigate(`/game/${roomId}`);
-    });
+    refreshRoomList();
+  }, [refreshRoomList]);
 
-    socket.on('onSuccessRoomConnection', (roomId: number) => {
-      navigate(`/game/${roomId}`);
-    });
-
-    socket.on(
-      'onError',
-      ({ message, closeConnection }: { message: string; closeConnection: boolean | undefined }) => {
-        if (closeConnection) {
-          setError({
-            message,
-            callback: () => {
-              window.localStorage.removeItem('uuid');
-              window.localStorage.removeItem('player-name');
-              navigate(`/login`, { replace: true });
-            }
-          });
-        } else {
-          setError({ message, callback: () => setError(null) });
-        }
-      }
-    );
-
-    return () => {
-      socket.off('onRoomGenerated');
-      socket.off('onSuccessRoomConnection');
-      socket.off('onError');
-    };
-  }, [socket, navigate]);
-
+  // [이벤트 등록] 방 목록을 성공적으로 갱신했을 경우 발생하는 이벤트
   useEffect(() => {
     if (socket) {
-      socket.on('onRoomListRefreshed', (roomList: Room[]) => {
+      socket.on('onRoomListRefreshed', (roomList: RoomListItem[]) => {
         setRoomList(roomList);
       });
     }
@@ -153,13 +125,53 @@ const RoomListPage = () => {
     };
   }, [socket]);
 
+  // [이벤트 등록] 방을 성공적으로 생성했을 경우에 발생하는 이벤트
   useEffect(() => {
-    if (socket) {
-      refreshRoomList();
-    }
-  }, [socket, refreshRoomList]);
+    socket.on('onRoomCreated', (roomId: number) => {
+      navigate(`/game/${roomId}`);
+    });
 
-  if (!playerName) return null;
+    return () => {
+      socket.off('onRoomCreated');
+    };
+  }, [socket, navigate]);
+
+  // [이벤트 등록] 게임 방에 입장 가능함이 확인된 경우에 발생하는 이벤트
+  useEffect(() => {
+    socket.on('onRoomJoined', (roomId: number) => {
+      navigate(`/game/${roomId}`);
+    });
+
+    return () => {
+      socket.off('onRoomJoined');
+    };
+  }, [socket, navigate]);
+
+  // useEffect(() => {
+  //   socket.on(
+  //     'onError',
+  //     ({ message, closeConnection }: { message: string; closeConnection: boolean | undefined }) => {
+  //       if (closeConnection) {
+  //         setError({
+  //           message,
+  //           callback: () => {
+  //             window.localStorage.removeItem('uuid');
+  //             window.localStorage.removeItem('player-name');
+  //             navigate(`/login`, { replace: true });
+  //           }
+  //         });
+  //       } else {
+  //         setError({ message, callback: () => setError(null) });
+  //       }
+  //     }
+  //   );
+
+  //   return () => {
+  //     socket.off('onError');
+  //   };
+  // }, [socket, navigate]);
+
+  if (!uuid && !playerName) return null;
 
   return (
     <Container>

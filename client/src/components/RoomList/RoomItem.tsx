@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Room } from 'types/room';
+import { RoomListItem } from 'types/room';
 
 const Container = styled.div`
   width: calc((100% - 16px) / 2);
@@ -8,7 +8,7 @@ const Container = styled.div`
 `;
 
 interface RoomItemProps {
-  item: Room;
+  item: RoomListItem;
   onClickItem: (roomId: string) => void;
 }
 

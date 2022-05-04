@@ -4,7 +4,7 @@ import useCheckValidUser from 'helpers/useCheckValidUser';
 import { useCallback, useContext } from 'react';
 import styled from 'styled-components';
 
-import { Room } from 'types/room';
+import { RoomListItem } from 'types/room';
 import NavButtons from './NavButtons';
 import RoomItem from './RoomItem';
 
@@ -23,7 +23,7 @@ const ListContainer = styled.div`
 `;
 
 interface RoomListProps {
-  listItem: Room[];
+  listItem: RoomListItem[];
 }
 
 const RoomList = ({ listItem }: RoomListProps) => {
