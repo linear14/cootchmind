@@ -73,7 +73,7 @@ io.on('connection', (socket) => {
     const room: Room = {
       roomId,
       title,
-      users: Array.from({ length: 6 }, () => null),
+      players: Array.from({ length: 6 }, () => null),
       master: { name: playerName, uuid },
       quizIndices: [],
       currentRound: 0,
@@ -81,7 +81,7 @@ io.on('connection', (socket) => {
       state: 'ready'
     };
 
-    room.users[0] = { name: playerName, uuid, isMaster: true, answerCnt: 0 };
+    room.players[0] = { name: playerName, uuid, isMaster: true, answerCnt: 0 };
     rooms.set(roomId, room);
 
     uuidToRoomId.set(uuid, roomId);
@@ -103,7 +103,6 @@ io.on('connection', (socket) => {
     socket.emit('onRoomListRefreshed', parsedRoom);
   });
 
-  // 추가 필요: 게임 진행중인 방은 입장할 수 없도록
   // 6. 방 입장 시도 - 완료
   socket.on('tryEnterRoom', ({ uuid, playerName, roomId }) => {
     // 게임 방이 존재하는지
@@ -113,8 +112,14 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // 게임 진행중인 방
+    if (room.state !== 'ready') {
+      socket.emit('onError', { message: '이미 게임이 진행되고 있는 방입니다.' });
+      return;
+    }
+
     // 게임 방의 인원수가 가득 차있는지
-    if (room.users.filter((user) => user === null).length === 0) {
+    if (room.players.filter((player) => player === null).length === 0) {
       socket.emit('onError', { message: '이미 가득 찬 방입니다.' });
       return;
     }
@@ -127,9 +132,9 @@ io.on('connection', (socket) => {
 
     uuidToRoomId.set(uuid, roomId);
     socketToRoomId.set(socket.id, roomId);
-    const emptyIdx = room.users.findIndex((user) => user === null);
+    const emptyIdx = room.players.findIndex((player) => player === null);
     if (emptyIdx >= 0) {
-      room.users[emptyIdx] = {
+      room.players[emptyIdx] = {
         name: playerName,
         uuid,
         isMaster: room.master.uuid === uuid,
@@ -156,12 +161,12 @@ io.on('connection', (socket) => {
     socket.emit('onRoomEntered', {
       roomId: room.roomId,
       title: room.title,
-      users: room.users,
+      players: room.players,
       currentRound: room.currentRound,
       state: room.state,
       turn: room.turn
     }); // 받으면 클라이언트에서 알아서 잘 쓰기
-    socket.to(roomId).emit('onPlayerRefreshed', room.users);
+    socket.to(roomId).emit('onPlayerRefreshed', room.players);
     socket.leave(CHAT_CHANNEL);
   });
 
@@ -178,11 +183,11 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const userIdx = room.users.findIndex((user) => user?.uuid === uuid);
-    if (userIdx >= 0) {
-      room.users[userIdx] = null;
+    const playerIdx = room.players.findIndex((player) => player?.uuid === uuid);
+    if (playerIdx >= 0) {
+      room.players[playerIdx] = null;
     }
-    io.to(roomId).emit('onPlayerRefreshed', room.users);
+    io.to(roomId).emit('onPlayerRefreshed', room.players);
   });
 
   // 9. 방 폭파 - 완료
@@ -225,7 +230,7 @@ io.on('connection', (socket) => {
     let nextTurnDecided = false;
     let nextTurnIdx = room.turn ? (room.turn.idx + 1) % 6 : 0;
     for (let i = nextTurnIdx; i < 6; i++) {
-      if (room.users[i] !== null) {
+      if (room.players[i] !== null) {
         nextTurnIdx = i;
         nextTurnDecided = true;
         break;
@@ -233,29 +238,29 @@ io.on('connection', (socket) => {
     }
     if (!nextTurnDecided) {
       for (let i = 0; i < nextTurnIdx; i++) {
-        if (room.users[i] !== null) {
+        if (room.players[i] !== null) {
           nextTurnIdx = i;
           break;
         }
       }
     }
 
-    const nextUser = room.users[nextTurnIdx];
-    if (nextUser) {
+    const nextPlayer = room.players[nextTurnIdx];
+    if (nextPlayer) {
       room.state = 'play';
       room.currentRound = room.currentRound + 1;
-      room.turn = { name: nextUser.name, uuid: nextUser.uuid, idx: nextTurnIdx };
+      room.turn = { name: nextPlayer.name, uuid: nextPlayer.uuid, idx: nextTurnIdx };
 
-      const nextUserUUID = nextUser.uuid;
-      const nextUserSocketList = UUIDToSocketList.get(nextUserUUID);
-      const nextUserSocketId = nextUserSocketList?.find(
+      const nextPlayerUUID = nextPlayer.uuid;
+      const nextPlayerSocketList = UUIDToSocketList.get(nextPlayerUUID);
+      const nextPlayerSocketId = nextPlayerSocketList?.find(
         (socketId) => socketToRoomId.get(socketId) === roomId
       );
       const answer = quizItemList[room.quizIndices[room.currentRound - 1]].answer;
 
-      if (nextUserSocketId) {
-        io.to(nextUserSocketId).emit('onRoundStarted', { turn: room.turn, answer });
-        io.to(roomId).except(nextUserSocketId).emit('onRoundStarted', { turn: room.turn });
+      if (nextPlayerSocketId) {
+        io.to(nextPlayerSocketId).emit('onRoundStarted', { turn: room.turn, answer });
+        io.to(roomId).except(nextPlayerSocketId).emit('onRoundStarted', { turn: room.turn });
       } else {
         io.to(roomId).emit('onError', { message: '플레이어 정보가 소멸되었습니다.' });
         return;
@@ -281,12 +286,12 @@ io.on('connection', (socket) => {
       const answer = quizItemList[room.quizIndices[currentRound - 1]];
 
       if (answer === message) {
-        const user = room.users.find((user) => user?.uuid === uuid);
-        if (user && user !== null) {
-          user.answerCnt++;
+        const player = room.players.find((player) => player?.uuid === uuid);
+        if (player && player !== null) {
+          player.answerCnt++;
         }
         room.state = 'interval';
-        io.to(roomId).emit('onRoundEnded', { answer, winPlayer: user });
+        io.to(roomId).emit('onRoundEnded', { answer, winPlayer: player });
       }
     }
   });
@@ -331,9 +336,9 @@ io.on('connection', (socket) => {
 
     room.state === 'ready';
     for (let i = 0; i < 6; i++) {
-      const user = room.users[i];
-      if (user !== null) {
-        user.answerCnt = 0;
+      const player = room.players[i];
+      if (player !== null) {
+        player.answerCnt = 0;
       }
     }
     room.quizIndices = [];
@@ -379,11 +384,11 @@ io.on('connection', (socket) => {
         }
         // 방장이 아닌경우
         else {
-          const userIdx = room.users.findIndex((user) => user?.uuid === uuid);
-          if (userIdx >= 0) {
-            room.users[userIdx] = null;
+          const playerIdx = room.players.findIndex((player) => player?.uuid === uuid);
+          if (playerIdx >= 0) {
+            room.players[playerIdx] = null;
           }
-          io.to(room.roomId).emit('onPlayerRefreshed', room.users);
+          io.to(room.roomId).emit('onPlayerRefreshed', room.players);
         }
       }
     }
