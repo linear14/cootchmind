@@ -1,13 +1,15 @@
 import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useContext, useMemo, useCallback } from 'react';
+import { useState, useEffect, useContext, useCallback } from 'react';
 
 import GameBoard from 'components/GameBoard';
 import PlayerList from 'components/PlayerList';
 import { getLocalStorageUser } from 'helpers/authUtil';
 import { SocketContext } from 'context/socket';
-import { Room } from 'types/room';
+import { Room, RoomDataImmutable, RoomGameState } from 'types/room';
 import { UserContext } from 'context/user';
+import { Player } from 'types/player';
+import { User } from 'types/user';
 
 const Container = styled.div`
   width: 100%;
@@ -35,10 +37,15 @@ const GameStartButton = styled.div`
   }
 `;
 
-// useMemo쓰면 uuid가 고정 아닐까?
 const GamePage = () => {
   const { roomId } = useParams();
-  const [room, setRoom] = useState<Room>();
+  const [playerList, setPlayerList] = useState<(Player | null)[]>(
+    Array.from({ length: 6 }, () => null)
+  );
+  const [gameState, setGameState] = useState<RoomGameState>();
+  const [room, setRoom] = useState<RoomDataImmutable>();
+  const [answer, setAnswer] = useState<string>();
+
   const { uuid, playerName } = useContext(UserContext);
   const [isLoading, setLoading] = useState(true);
   const socket = useContext(SocketContext);
@@ -47,109 +54,155 @@ const GamePage = () => {
   const isGameAvailable = useCallback(() => {
     if (!room) return false;
     return (
-      room.state === 'ready' &&
+      gameState?.state === 'ready' &&
       room.master.uuid === uuid &&
-      room.users.filter((user) => user !== null).length >= 2
+      playerList.filter((player) => player !== null).length >= 2
     );
-  }, [room, uuid]);
+  }, [room, uuid, gameState, playerList]);
 
   const startGame = useCallback(() => {
     if (socket && roomId) {
-      socket.emit('gameStart', { roomId });
+      socket.emit('startGame', { roomId });
     }
   }, [socket, roomId]);
 
   const getTurnIndex = useCallback(
     (indices: number[]): number | undefined => {
-      if (!room || !room.turn) {
+      if (!gameState || !gameState.turn) {
         return undefined;
       }
 
       for (let i = 0; i < indices.length; i++) {
-        if (room.turn.idx === indices[i]) {
+        if (gameState.turn.idx === indices[i]) {
           return i;
         }
       }
       return undefined;
     },
-    [room]
+    [gameState]
   );
 
+  /**
+   * 페이지 접근 시 로그인 상태 확인
+   * 1. 로그인 안되어 있는 경우 -> login 페이지로 이동
+   * 2. 로그인 되어있는 경우 -> Loading 플래그를 false로 바꿔주기
+   **/
   useEffect(() => {
     const { uuid, playerName } = getLocalStorageUser();
     if (!playerName || !uuid) {
       navigate('/login', { replace: true });
       return;
     }
-    setLoading(false);
   }, [navigate, playerName, uuid]);
 
-  useEffect(() => {
-    if (socket) {
-      socket.on('onPlayerRefreshed', (users) => {
-        setRoom((prev) => {
-          if (prev) {
-            return { ...prev, users };
-          } else {
-            return prev;
-          }
-        });
-      });
-
-      socket.on('onEnteredGameRoom', (room) => {
-        setRoom(room);
-      });
-
-      socket.on('onRoundStart', ({ room, answer }) => {
-        setRoom(room);
-      });
-
-      return () => {
-        socket.off('onPlayerRefreshed');
-        socket.off('onEnteredGameRoom');
-        socket.off('onRoundStart');
-      };
-    }
-  }, [socket]);
-
+  // 방 입장 (from url / from previous page)시 정상적으로 접속했는지 여부 판단하는 이벤트 발생
+  // 방 퇴장시 이벤트 발생
   useEffect(() => {
     if (socket && roomId && playerName && uuid) {
-      socket.emit('enterGameRoom', { roomId, playerName, uuid });
+      socket.emit('enterRoom', { uuid, roomId });
 
       return () => {
-        socket.emit('leaveGameRoom', { roomId, playerName, uuid });
+        socket.emit('leaveRoom', { uuid, roomId });
       };
     }
   }, [socket, roomId, playerName, uuid]);
 
+  // [이벤트 등록] 방에 성공적으로 입장했을 경우 발생하는 이벤트
   useEffect(() => {
-    if (socket && uuid && roomId) {
-      socket.on('onGameStart', (room: Room) => {
-        setRoom(room);
-
-        // 원래는 시작 전 출제자를 보여주기를 요청하는 socket이 필요함 (prepareRound)
-        if (room.master.uuid === uuid) {
-          socket.emit('roundStart', { roomId });
-        }
+    if (socket) {
+      socket.on('onRoomEntered', (room: Room) => {
+        const roomDataImmutable = {
+          roomId: room.roomId,
+          title: room.title,
+          master: room.master as Required<User>
+        };
+        const gameState = {
+          state: room.state,
+          currentRound: room.currentRound,
+          turn: room.turn
+        };
+        setRoom(roomDataImmutable);
+        setGameState(gameState);
+        setLoading(false);
       });
+    }
+    return () => {
+      socket.off('onRoomEntered');
+    };
+  }, [socket]);
 
-      socket.on('onRoundEnd', (room: Room) => {
-        setRoom(room);
+  // [이벤트 등록] 플레이어 변동이 있을 경우에 발생하는 이벤트
+  useEffect(() => {
+    if (socket) {
+      socket.on('onPlayerRefreshed', (players: (Player | null)[]) => {
+        setPlayerList(players);
+      });
+    }
+    return () => {
+      socket.off('onPlayerRefreshed');
+    };
+  }, [socket]);
 
-        if (room.master.uuid === uuid) {
-          setTimeout(() => {
-            socket.emit('roundStart', { roomId });
-          }, 3000);
-        }
+  // [이벤트 등록] 새로운 게임이 시작 되었을 때 발생하는 이벤트
+  // prev game state가 undefined이면 어떻게하지?
+  useEffect(() => {
+    if (socket) {
+      socket.on('onGameStarted', ({ state }) => {
+        setGameState((prev) => {
+          if (prev) {
+            return { ...prev, state };
+          }
+        });
+      });
+    }
+
+    return () => {
+      socket.off('onGameStart');
+    };
+  }, [socket]);
+
+  // [이벤트 등록] 새로운 라운드가 시작 되었을 때 발생하는 이벤트
+  useEffect(() => {
+    if (socket) {
+      socket.on('onRoundStarted', ({ state, currentRound, turn, answer }) => {
+        setGameState({
+          state,
+          currentRound,
+          turn
+        });
+        setAnswer(answer);
       });
 
       return () => {
-        socket.off('onGameStart');
+        socket.off('onRoundStarted');
+      };
+    }
+  }, [socket]);
+
+  // [이벤트 등록] 해당 라운드가 종료 되었을 때 발생하는 이벤트
+  // prev game state가 undefined이면 어떻게하지?
+  useEffect(() => {
+    if (socket) {
+      socket.on('onRoundEnded', ({ answer, winPlayer, state }) => {
+        setGameState((prev) => {
+          if (prev) {
+            return { ...prev, state };
+          }
+        });
+        // if (room.master.uuid === uuid) {
+        //   setTimeout(() => {
+        //     socket.emit('roundStart', { roomId });
+        //   }, 3000);
+        // }
+      });
+
+      return () => {
         socket.off('onRoundEnd');
       };
     }
-  }, [socket, uuid, roomId]);
+  }, [socket]);
 
+  // [이벤트 등록] 방장이 방을 나가는 경우 - 방 폭파
   useEffect(() => {
     if (socket) {
       socket.on('onMasterLeftRoom', () => {
@@ -168,16 +221,20 @@ const GamePage = () => {
     <Container>
       {room && (
         <PlayerList
-          listItem={[room.users[0], room.users[2], room.users[4]]}
-          turnIndex={room.state === 'play' && room.turn ? getTurnIndex([0, 2, 4]) : undefined}
+          listItem={[playerList[0], playerList[2], playerList[4]]}
+          turnIndex={
+            gameState?.state === 'play' && gameState?.turn ? getTurnIndex([0, 2, 4]) : undefined
+          }
         />
       )}
       <GameBoard roomId={roomId} />
       {isGameAvailable() && <GameStartButton onClick={startGame} />}
       {room && (
         <PlayerList
-          listItem={[room.users[1], room.users[3], room.users[5]]}
-          turnIndex={room.state === 'play' && room.turn ? getTurnIndex([1, 3, 5]) : undefined}
+          listItem={[playerList[1], playerList[3], playerList[5]]}
+          turnIndex={
+            gameState?.state === 'play' && gameState?.turn ? getTurnIndex([1, 3, 5]) : undefined
+          }
         />
       )}
     </Container>

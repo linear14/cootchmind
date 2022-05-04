@@ -161,6 +161,7 @@ io.on('connection', (socket) => {
     socket.emit('onRoomEntered', {
       roomId: room.roomId,
       title: room.title,
+      master: room.master,
       players: room.players,
       currentRound: room.currentRound,
       state: room.state,
@@ -214,7 +215,7 @@ io.on('connection', (socket) => {
     }
     room.state = 'interval';
     room.quizIndices = getQuizIndices(quizItemList.length);
-    io.to(roomId).emit('onGameStarted', room);
+    io.to(roomId).emit('onGameStarted', { state: room.state });
   });
 
   // 추가 필요: 모든 플레이어의 ready 신호가 떨어지면 시작할 수 있도록
@@ -258,9 +259,15 @@ io.on('connection', (socket) => {
       );
       const answer = quizItemList[room.quizIndices[room.currentRound - 1]].answer;
 
+      const newState = {
+        state: 'play',
+        currentRound: room.currentRound,
+        turn: room.turn
+      };
+
       if (nextPlayerSocketId) {
-        io.to(nextPlayerSocketId).emit('onRoundStarted', { turn: room.turn, answer });
-        io.to(roomId).except(nextPlayerSocketId).emit('onRoundStarted', { turn: room.turn });
+        io.to(nextPlayerSocketId).emit('onRoundStarted', { ...newState, answer });
+        io.to(roomId).except(nextPlayerSocketId).emit('onRoundStarted', newState);
       } else {
         io.to(roomId).emit('onError', { message: '플레이어 정보가 소멸되었습니다.' });
         return;
@@ -291,7 +298,7 @@ io.on('connection', (socket) => {
           player.answerCnt++;
         }
         room.state = 'interval';
-        io.to(roomId).emit('onRoundEnded', { answer, winPlayer: player });
+        io.to(roomId).emit('onRoundEnded', { answer, winPlayer: player, state: room.state });
       }
     }
   });
