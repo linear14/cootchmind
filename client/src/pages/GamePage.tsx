@@ -122,6 +122,7 @@ const GamePage = () => {
           turn: room.turn
         };
         setRoom(roomDataImmutable);
+        setPlayerList(room.players);
         setGameState(gameState);
         setLoading(false);
       });

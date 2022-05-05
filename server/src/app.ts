@@ -184,17 +184,8 @@ io.on('connection', (socket) => {
       return;
     }
 
-    const playerIdx = room.players.findIndex((player) => player?.uuid === uuid);
-    if (playerIdx >= 0) {
-      room.players[playerIdx] = null;
-    }
-    io.to(roomId).emit('onPlayerRefreshed', room.players);
-  });
-
-  // 9. 방 폭파 - 완료
-  socket.on('deleteRoom', ({ uuid, roomId }) => {
-    const room = rooms.get(roomId);
-    if (room && room.master.uuid === uuid) {
+    // 방장이면 - 방 폭파
+    if (room.master.uuid === uuid) {
       rooms.delete(roomId);
       uuidToRoomId.delete(uuid);
       socketToRoomId.delete(socket.id);
@@ -202,6 +193,14 @@ io.on('connection', (socket) => {
 
       socket.to(roomId).emit('onMasterLeftRoom'); // 방장 빼고 emit
       io.socketsLeave(roomId);
+    }
+    // 방장 아니면 - 플레이어 최신화
+    else {
+      const playerIdx = room.players.findIndex((player) => player?.uuid === uuid);
+      if (playerIdx >= 0) {
+        room.players[playerIdx] = null;
+      }
+      io.to(roomId).emit('onPlayerRefreshed', room.players);
     }
   });
 
