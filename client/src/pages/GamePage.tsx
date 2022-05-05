@@ -228,7 +228,7 @@ const GamePage = () => {
           }
         />
       )}
-      <GameBoard roomId={roomId} />
+      <GameBoard roomId={roomId} state={gameState?.state} />
       {isGameAvailable() && <GameStartButton onClick={startGame} />}
       {room && (
         <PlayerList

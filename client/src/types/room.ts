@@ -33,4 +33,4 @@ export interface RoomGameState {
 }
 
 // 시작 전, 라운드 넘어가는 사이 중간 상태, 게임 진행중인 상태
-type GameState = 'ready' | 'interval' | 'play';
+type GameState = 'ready' | 'start' | 'interval' | 'play' | 'end';

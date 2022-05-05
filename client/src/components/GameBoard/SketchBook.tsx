@@ -3,17 +3,41 @@ import styled from 'styled-components';
 
 interface SketchBookProps {
   canvasWidth?: number;
+  state?: string;
 }
 
-const Canvas = styled.canvas`
+const Container = styled.div`
   margin-top: 1rem;
+  position: relative;
+`;
+
+const Canvas = styled.canvas`
   border: 1px solid black;
   background: white;
   cursor: crosshair;
 `;
 
+const StartGameBanner = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 36px;
+  font-weight: bold;
+  background-color: white;
+  z-index: 5;
+
+  &::after {
+    content: '게임 시작!';
+  }
+`;
+
 const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
-  ({ canvasWidth }, canvasRef) => {
+  ({ canvasWidth, state }, canvasRef) => {
     const [isDrawing, setDrawing] = useState<boolean>(false);
     const contextRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -125,14 +149,17 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
 
     if (!canvasWidth) return null;
     return (
-      <Canvas
-        ref={canvasRef}
-        onMouseDown={drawStart}
-        onContextMenu={(e) => e.preventDefault()}
-        onMouseMove={draw}
-        onMouseUp={drawEnd}
-        onMouseLeave={drawEnd}
-      />
+      <Container>
+        <Canvas
+          ref={canvasRef}
+          onMouseDown={drawStart}
+          onContextMenu={(e) => e.preventDefault()}
+          onMouseMove={draw}
+          onMouseUp={drawEnd}
+          onMouseLeave={drawEnd}
+        />
+        {state === 'start' && <StartGameBanner />}
+      </Container>
     );
   }
 );

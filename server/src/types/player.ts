@@ -3,4 +3,5 @@ export interface Player {
   uuid: string;
   isMaster: boolean;
   answerCnt: number;
+  isReady: boolean;
 }

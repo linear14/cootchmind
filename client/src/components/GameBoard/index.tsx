@@ -13,9 +13,10 @@ const Container = styled.div`
 
 interface GameBoardProps {
   roomId?: string;
+  state?: string;
 }
 
-const GameBoard = ({ roomId }: GameBoardProps) => {
+const GameBoard = ({ roomId, state }: GameBoardProps) => {
   const [canvasWidth, setCanvasWidth] = useState<number>();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -32,7 +33,7 @@ const GameBoard = ({ roomId }: GameBoardProps) => {
   return (
     <Container ref={boardRef}>
       {roomId && <Timer playTime={10} roomId={roomId} />}
-      <SketchBook canvasWidth={canvasWidth} ref={canvasRef} />
+      <SketchBook canvasWidth={canvasWidth} ref={canvasRef} state={state} />
       <Palette canvasRef={canvasRef} />
       <AnswerInput />
     </Container>

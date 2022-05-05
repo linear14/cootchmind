@@ -1,6 +1,7 @@
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
+import { Player } from 'types/player';
 import { Room } from 'types/room';
 import { quizItemList } from './data/quiz';
 import { getQuizIndices } from './helpers/gameUtil';
@@ -36,6 +37,88 @@ const removeSession = (socketId: string, uuid: string) => {
       UUIDToSocketList.set(uuid, currentSession);
       socketToRoomId.delete(socketId);
     }
+  }
+};
+
+const checkAllReady = (room: Room) => {
+  const playerCount = room.players.filter((player) => player !== null).length;
+  const readyUserCount = room.players.filter((player) => player !== null && player.isReady).length;
+
+  if (playerCount <= readyUserCount) {
+    console.log(`Ready!!: ${readyUserCount}/${playerCount}`);
+    return true;
+  } else {
+    console.log(`not Ready: ${readyUserCount}/${playerCount}`);
+    return false;
+  }
+};
+
+const getNextPlayer = (room: Room): [number, Player | null] => {
+  // 다음 턴 유저 결정
+  let nextTurnDecided = false;
+  let nextTurnIdx = room.turn ? (room.turn.idx + 1) % 6 : 0;
+  for (let i = nextTurnIdx; i < 6; i++) {
+    if (room.players[i] !== null) {
+      nextTurnIdx = i;
+      nextTurnDecided = true;
+      break;
+    }
+  }
+  if (!nextTurnDecided) {
+    for (let i = 0; i < nextTurnIdx; i++) {
+      if (room.players[i] !== null) {
+        nextTurnIdx = i;
+        break;
+      }
+    }
+  }
+  return [nextTurnIdx, room.players[nextTurnIdx]];
+};
+
+const setRoomStateForNextRound = (room: Room, nextTurnIdx: number, nextPlayer: Player) => {
+  room.state = 'play';
+  room.currentRound = room.currentRound + 1;
+  room.turn = { name: nextPlayer.name, uuid: nextPlayer.uuid, idx: nextTurnIdx };
+
+  const nextPlayerUUID = nextPlayer.uuid;
+  const nextPlayerSocketList = UUIDToSocketList.get(nextPlayerUUID);
+  const nextPlayerSocketId = nextPlayerSocketList?.find(
+    (socketId) => socketToRoomId.get(socketId) === room.roomId
+  );
+  const answer = quizItemList[room.quizIndices[room.currentRound - 1]].answer;
+
+  const newGameState = {
+    state: 'play',
+    currentRound: room.currentRound,
+    turn: room.turn
+  };
+
+  return {
+    nextPlayerSocketId,
+    answer,
+    newGameState
+  };
+};
+
+const startRound = (room: Room) => {
+  const [nextTurnIdx, nextPlayer] = getNextPlayer(room);
+  if (nextPlayer) {
+    const { nextPlayerSocketId, answer, newGameState } = setRoomStateForNextRound(
+      room,
+      nextTurnIdx,
+      nextPlayer
+    );
+
+    if (nextPlayerSocketId) {
+      io.to(nextPlayerSocketId).emit('onRoundStarted', { ...newGameState, answer });
+      io.to(room.roomId).except(nextPlayerSocketId).emit('onRoundStarted', newGameState);
+    } else {
+      io.to(room.roomId).emit('onError', { message: '플레이어 정보가 소멸되었습니다.' });
+      return;
+    }
+  } else {
+    io.to(room.roomId).emit('onError', { message: '플레이어가 존재하지 않습니다.' });
+    return;
   }
 };
 
@@ -81,7 +164,7 @@ io.on('connection', (socket) => {
       state: 'ready'
     };
 
-    room.players[0] = { name: playerName, uuid, isMaster: true, answerCnt: 0 };
+    room.players[0] = { name: playerName, uuid, isMaster: true, answerCnt: 0, isReady: true };
     rooms.set(roomId, room);
 
     uuidToRoomId.set(uuid, roomId);
@@ -138,7 +221,8 @@ io.on('connection', (socket) => {
         name: playerName,
         uuid,
         isMaster: room.master.uuid === uuid,
-        answerCnt: 0
+        answerCnt: 0,
+        isReady: false
       };
     }
     socket.emit('onRoomJoined', roomId);
@@ -205,76 +289,31 @@ io.on('connection', (socket) => {
   });
 
   // 추가 필요: 모든 사용자가 준비 완료 되었을 때 시작 가능하도록
-  // 10. 게임 시작 - 완료
+  // 9. 게임 시작 - 완료
   socket.on('startGame', ({ roomId }) => {
     const room = rooms.get(roomId);
     if (!room) {
       socket.emit('onError', { message: '존재하지 않는 방입니다.' });
       return;
     }
-    room.state = 'interval';
+    room.state = 'start';
     room.quizIndices = getQuizIndices(quizItemList.length);
+    for (let i = 0; i < 6; i++) {
+      const player = room.players[i];
+      if (player) {
+        player.isReady = false;
+      }
+    }
     io.to(roomId).emit('onGameStarted', { state: room.state });
-  });
 
-  // 추가 필요: 모든 플레이어의 ready 신호가 떨어지면 시작할 수 있도록
-  // 11. 라운드 시작 - 완료
-  socket.on('startRound', ({ roomId }) => {
-    const room = rooms.get(roomId);
-    if (!room) {
-      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
-      return;
-    }
-
-    // 다음 턴 유저 결정
-    let nextTurnDecided = false;
-    let nextTurnIdx = room.turn ? (room.turn.idx + 1) % 6 : 0;
-    for (let i = nextTurnIdx; i < 6; i++) {
-      if (room.players[i] !== null) {
-        nextTurnIdx = i;
-        nextTurnDecided = true;
-        break;
-      }
-    }
-    if (!nextTurnDecided) {
-      for (let i = 0; i < nextTurnIdx; i++) {
-        if (room.players[i] !== null) {
-          nextTurnIdx = i;
-          break;
-        }
-      }
-    }
-
-    const nextPlayer = room.players[nextTurnIdx];
-    if (nextPlayer) {
-      room.state = 'play';
-      room.currentRound = room.currentRound + 1;
-      room.turn = { name: nextPlayer.name, uuid: nextPlayer.uuid, idx: nextTurnIdx };
-
-      const nextPlayerUUID = nextPlayer.uuid;
-      const nextPlayerSocketList = UUIDToSocketList.get(nextPlayerUUID);
-      const nextPlayerSocketId = nextPlayerSocketList?.find(
-        (socketId) => socketToRoomId.get(socketId) === roomId
-      );
-      const answer = quizItemList[room.quizIndices[room.currentRound - 1]].answer;
-
-      const newState = {
-        state: 'play',
-        currentRound: room.currentRound,
-        turn: room.turn
-      };
-
-      if (nextPlayerSocketId) {
-        io.to(nextPlayerSocketId).emit('onRoundStarted', { ...newState, answer });
-        io.to(roomId).except(nextPlayerSocketId).emit('onRoundStarted', newState);
-      } else {
-        io.to(roomId).emit('onError', { message: '플레이어 정보가 소멸되었습니다.' });
+    setTimeout(() => {
+      const room = rooms.get(roomId);
+      if (!room) {
+        socket.emit('onError', { message: '존재하지 않는 방입니다.' });
         return;
       }
-    } else {
-      io.to(roomId).emit('onError', { message: '플레이어가 존재하지 않습니다.' });
-      return;
-    }
+      startRound(room);
+    }, 3000);
   });
 
   // 12. 정답 전송 - 완료
