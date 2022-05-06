@@ -3,6 +3,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import AnswerInput from './AnswerInput';
 import NextGameBanner from './Banners/NextGameBanner';
+import RoundResultBanner from './Banners/RoundResultBanner';
 import StartGameBanner from './Banners/StartGameBanner';
 import CurrentWord from './CurrentWord';
 import GameStartButton from './GameStartButton';
@@ -55,6 +56,7 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
         {state && state === 'readyRound' && currentRound && turn && (
           <NextGameBanner currentRound={currentRound} name={turn?.name} />
         )}
+        {state && state === 'interval' && <RoundResultBanner />}
       </BoardContainer>
       <Palette canvasRef={canvasRef} />
       <AnswerInput />

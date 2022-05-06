@@ -358,16 +358,16 @@ io.on('connection', (socket) => {
 
     if (room.state === 'play') {
       const currentRound = room.currentRound;
-      const answer = quizItemList[room.quizIndices[currentRound - 1]];
+      const question = quizItemList[room.quizIndices[currentRound - 1]];
 
-      if (answer === message) {
+      if (question.answer === message) {
         const player = room.players.find((player) => player?.uuid === uuid);
         if (player && player !== null) {
           player.answerCnt++;
         }
         room.state = 'interval';
         io.to(roomId).emit('onRoundEnded', {
-          answer,
+          answer: question.answer,
           winPlayer: player,
           state: room.state,
           currentRound: room.currentRound,
