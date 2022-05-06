@@ -11,7 +11,7 @@ import Timer from './Timer';
 
 const Container = styled.div`
   position: relative;
-  width: 60%;
+  width: 65%;
   border: 1px solid black;
 `;
 

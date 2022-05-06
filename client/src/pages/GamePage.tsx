@@ -1,12 +1,12 @@
 import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useContext, useCallback } from 'react';
+import { useState, useEffect, useContext } from 'react';
 
 import GameBoard from 'components/GameBoard';
 import PlayerList from 'components/PlayerList';
 import { getLocalStorageUser } from 'helpers/authUtil';
 import { SocketContext } from 'context/socket';
-import { Room, RoomDataImmutable, RoomGameState } from 'types/room';
+import { Room } from 'types/room';
 import { UserContext } from 'context/user';
 import { Player } from 'types/player';
 import { User } from 'types/user';
@@ -20,6 +20,7 @@ const Container = styled.div`
   background: #203d20;
 
   display: flex;
+  justify-content: space-between;
 `;
 
 const GamePage = () => {
@@ -30,7 +31,6 @@ const GamePage = () => {
   const { setRoom } = useContext(RoomContext);
   const { setGameState } = useContext(GameStateContext);
   const { playerList, setPlayerList } = useContext(PlayerListContext);
-  // const [room, setRoom] = useState<RoomDataImmutable>();
   const [answer, setAnswer] = useState<string>();
 
   const { uuid, playerName } = useContext(UserContext);
@@ -168,9 +168,8 @@ const GamePage = () => {
 
   return (
     <Container>
-      <PlayerList listItem={[playerList[0], playerList[2], playerList[4]]} indices={[0, 2, 4]} />
+      <PlayerList />
       <GameBoard roomId={roomId} answer={answer} />
-      <PlayerList listItem={[playerList[1], playerList[3], playerList[5]]} indices={[1, 3, 5]} />
     </Container>
   );
 };

@@ -1,50 +1,43 @@
 import { GameStateContext } from 'context/game';
+import { PlayerListContext } from 'context/playerList';
 import { useContext, useMemo } from 'react';
 import styled from 'styled-components';
 
-import { Player } from 'types/player';
 import PlayerItem from './PlayerItem';
 
 const Container = styled.div`
-  flex: 1;
+  width: 18%;
   background: transparent;
   // border: 1px solid black;
 
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 24px;
 `;
 
-interface PlayerListProps {
-  listItem: (Player | null)[];
-  indices: number[];
-}
-
-const PlayerList = ({ listItem, indices }: PlayerListProps) => {
+const PlayerList = () => {
+  const { playerList } = useContext(PlayerListContext);
   const { state, turn } = useContext(GameStateContext);
 
   const turnIndex = useMemo(() => {
-    if (!state || !turn) {
+    if (!state || !turn || state !== 'play') {
       return undefined;
     }
-
-    if (state !== 'play') {
-      return undefined;
-    }
-
-    for (let i = 0; i < indices.length; i++) {
-      if (turn.idx === indices[i]) {
-        return i;
-      }
+    if (turn.idx !== undefined) {
+      return turn.idx;
     }
     return undefined;
-  }, [indices, state, turn]);
+  }, [state, turn]);
 
   return (
     <Container>
-      {listItem.map((item, idx) => (
-        <PlayerItem key={item?.uuid ?? `pi${idx}`} item={item} turnHighlight={turnIndex === idx} />
+      {playerList.map((item, idx) => (
+        <PlayerItem
+          key={item?.uuid ?? `pi${idx}`}
+          player={item}
+          turnHighlight={turnIndex === idx}
+        />
       ))}
     </Container>
   );
