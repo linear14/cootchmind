@@ -2,6 +2,8 @@ import { GameStateContext } from 'context/game';
 import { useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import AnswerInput from './AnswerInput';
+import StartGameBanner from './Banners/StartGameBanner';
+import CurrentWord from './CurrentWord';
 import GameStartButton from './GameStartButton';
 import Palette from './Palette';
 import SketchBook from './SketchBook';
@@ -20,30 +22,12 @@ const BoardContainer = styled.div`
   align-items: center;
 `;
 
-const StartGameBanner = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 36px;
-  font-weight: bold;
-  background-color: white;
-  z-index: 5;
-
-  &::after {
-    content: '게임 시작!';
-  }
-`;
-
 interface GameBoardProps {
   roomId?: string;
+  answer?: string;
 }
 
-const GameBoard = ({ roomId }: GameBoardProps) => {
+const GameBoard = ({ roomId, answer }: GameBoardProps) => {
   const [canvasWidth, setCanvasWidth] = useState<number>();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -65,6 +49,7 @@ const GameBoard = ({ roomId }: GameBoardProps) => {
       <BoardContainer>
         <SketchBook canvasWidth={canvasWidth} ref={canvasRef} />
         <GameStartButton />
+        {answer && <CurrentWord answer={answer} />}
         {state && state === 'start' && <StartGameBanner />}
       </BoardContainer>
       <Palette canvasRef={canvasRef} />

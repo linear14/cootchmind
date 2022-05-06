@@ -1,37 +1,27 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 const Container = styled.div<{ hidden?: boolean }>`
-  height: 30px;
-  line-height: 30px;
-  margin: 1rem auto 0px;
-  text-align: center;
+  position: absolute;
+  padding: 1rem;
+  bottom: 0;
+  right: 0;
+  border: 1px solid black;
+
+  line-height: 18px;
+  font-size: 18px;
+  font-weight: bold;
 
   display: flex;
   justify-content: center;
-
-  ${({ hidden }) =>
-    hidden &&
-    css`
-      display: hidden;
-    `}
-
-  div {
-    background: white;
-    padding: ${({ hidden }) => (hidden ? 0 : '0 1rem')};
-    font-size: 18px;
-  }
+  align-items: center;
 `;
 
 interface CurrentWordProps {
-  answer?: string;
+  answer: string;
 }
 
 const CurrentWord = ({ answer }: CurrentWordProps) => {
-  return (
-    <Container hidden={answer === undefined}>
-      <div>{answer}</div>
-    </Container>
-  );
+  return <Container>{answer}</Container>;
 };
 
 export default CurrentWord;

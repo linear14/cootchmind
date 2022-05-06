@@ -169,7 +169,7 @@ const GamePage = () => {
   return (
     <Container>
       <PlayerList listItem={[playerList[0], playerList[2], playerList[4]]} indices={[0, 2, 4]} />
-      <GameBoard roomId={roomId} />
+      <GameBoard roomId={roomId} answer={answer} />
       <PlayerList listItem={[playerList[1], playerList[3], playerList[5]]} indices={[1, 3, 5]} />
     </Container>
   );
