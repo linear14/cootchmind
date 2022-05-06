@@ -30,7 +30,7 @@ const GamePage = () => {
   const { roomId } = useParams();
   const { setRoom } = useContext(RoomContext);
   const { setGameState } = useContext(GameStateContext);
-  const { playerList, setPlayerList } = useContext(PlayerListContext);
+  const { setPlayerList } = useContext(PlayerListContext);
   const [answer, setAnswer] = useState<string>();
 
   const { uuid, playerName } = useContext(UserContext);
@@ -114,16 +114,33 @@ const GamePage = () => {
     };
   }, [socket]);
 
-  // [이벤트 등록] 새로운 라운드가 시작 되었을 때 발생하는 이벤트
+  // [이벤트 등록] 새로운 라운드가 준비 되었을 때 발생하는 이벤트
   useEffect(() => {
     if (socket) {
-      socket.on('onRoundStarted', ({ state, currentRound, turn, answer }) => {
+      socket.on('onRoundReady', ({ state, currentRound, turn, answer }) => {
         setGameState({
           state,
           currentRound,
           turn
         });
         setAnswer(answer);
+      });
+
+      return () => {
+        socket.off('onRoundReady');
+      };
+    }
+  }, [socket]);
+
+  // [이벤트 등록] 새로운 라운드가 시작 되었을 때 발생하는 이벤트
+  useEffect(() => {
+    if (socket) {
+      socket.on('onRoundStarted', ({ state, currentRound, turn }) => {
+        setGameState({
+          state,
+          currentRound,
+          turn
+        });
       });
 
       return () => {

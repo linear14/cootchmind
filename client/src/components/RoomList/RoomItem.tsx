@@ -44,6 +44,7 @@ interface RoomItemProps {
 const mapGameState = {
   ready: '대기 중',
   start: '게임 중',
+  readyRound: '게임 중',
   interval: '게임 중',
   play: '게임 중',
   end: '게임 중'

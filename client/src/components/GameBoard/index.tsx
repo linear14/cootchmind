@@ -2,6 +2,7 @@ import { GameStateContext } from 'context/game';
 import { useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import AnswerInput from './AnswerInput';
+import NextGameBanner from './Banners/NextGameBanner';
 import StartGameBanner from './Banners/StartGameBanner';
 import CurrentWord from './CurrentWord';
 import GameStartButton from './GameStartButton';
@@ -32,7 +33,7 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
 
-  const { state } = useContext(GameStateContext);
+  const { state, currentRound, turn } = useContext(GameStateContext);
 
   useEffect(() => {
     setCanvasWidth(boardRef.current?.offsetWidth);
@@ -51,6 +52,9 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
         <GameStartButton />
         {answer && <CurrentWord answer={answer} />}
         {state && state === 'start' && <StartGameBanner />}
+        {state && state === 'readyRound' && currentRound && turn && (
+          <NextGameBanner currentRound={currentRound} name={turn?.name} />
+        )}
       </BoardContainer>
       <Palette canvasRef={canvasRef} />
       <AnswerInput />

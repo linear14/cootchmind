@@ -76,7 +76,7 @@ const getNextPlayer = (room: Room): [number, Player | null] => {
 };
 
 const setRoomStateForNextRound = (room: Room, nextTurnIdx: number, nextPlayer: Player) => {
-  room.state = 'play';
+  room.state = 'readyRound';
   room.currentRound = room.currentRound + 1;
   room.turn = { name: nextPlayer.name, uuid: nextPlayer.uuid, idx: nextTurnIdx };
 
@@ -88,7 +88,7 @@ const setRoomStateForNextRound = (room: Room, nextTurnIdx: number, nextPlayer: P
   const answer = quizItemList[room.quizIndices[room.currentRound - 1]].answer;
 
   const newGameState = {
-    state: 'play',
+    state: 'readyRound',
     currentRound: room.currentRound,
     turn: room.turn
   };
@@ -110,8 +110,20 @@ const startRound = (room: Room) => {
     );
 
     if (nextPlayerSocketId) {
-      io.to(nextPlayerSocketId).emit('onRoundStarted', { ...newGameState, answer });
-      io.to(room.roomId).except(nextPlayerSocketId).emit('onRoundStarted', newGameState);
+      io.to(nextPlayerSocketId).emit('onRoundReady', { ...newGameState, answer });
+      io.to(room.roomId).except(nextPlayerSocketId).emit('onRoundReady', newGameState);
+
+      setTimeout(() => {
+        const rooom = rooms.get(room.roomId);
+        if (rooom) {
+          rooom.state = 'play';
+          io.to(rooom.roomId).emit('onRoundStarted', {
+            state: 'play',
+            currentRound: rooom.currentRound,
+            turn: rooom.turn
+          });
+        }
+      }, 3000);
     } else {
       io.to(room.roomId).emit('onError', { message: '플레이어 정보가 소멸되었습니다.' });
       return;
