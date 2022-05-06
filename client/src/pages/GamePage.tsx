@@ -10,6 +10,9 @@ import { Room, RoomDataImmutable, RoomGameState } from 'types/room';
 import { UserContext } from 'context/user';
 import { Player } from 'types/player';
 import { User } from 'types/user';
+import { GameStateContext } from 'context/game';
+import { RoomContext } from 'context/room';
+import { PlayerListContext } from 'context/playerList';
 
 const Container = styled.div`
   width: 100%;
@@ -19,68 +22,19 @@ const Container = styled.div`
   display: flex;
 `;
 
-const GameStartButton = styled.div`
-  position: absolute;
-  width: 240px;
-  height: 48px;
-  line-height: 48px;
-  top: 30%;
-  left: 50%;
-  transform: translateX(-50%);
-
-  text-align: center;
-  border: 1px solid black;
-  cursor: pointer;
-
-  &::after {
-    content: '게임 시작하기';
-  }
-`;
-
 const GamePage = () => {
+  const socket = useContext(SocketContext);
+  const navigate = useNavigate();
+
   const { roomId } = useParams();
-  const [playerList, setPlayerList] = useState<(Player | null)[]>(
-    Array.from({ length: 6 }, () => null)
-  );
-  const [gameState, setGameState] = useState<RoomGameState>();
-  const [room, setRoom] = useState<RoomDataImmutable>();
+  const { setRoom } = useContext(RoomContext);
+  const { setGameState } = useContext(GameStateContext);
+  const { playerList, setPlayerList } = useContext(PlayerListContext);
+  // const [room, setRoom] = useState<RoomDataImmutable>();
   const [answer, setAnswer] = useState<string>();
 
   const { uuid, playerName } = useContext(UserContext);
   const [isLoading, setLoading] = useState(true);
-  const socket = useContext(SocketContext);
-  const navigate = useNavigate();
-
-  const isGameAvailable = useCallback(() => {
-    if (!room) return false;
-    return (
-      gameState?.state === 'ready' &&
-      room.master.uuid === uuid &&
-      playerList.filter((player) => player !== null).length >= 2
-    );
-  }, [room, uuid, gameState, playerList]);
-
-  const startGame = useCallback(() => {
-    if (socket && roomId) {
-      socket.emit('startGame', { roomId });
-    }
-  }, [socket, roomId]);
-
-  const getTurnIndex = useCallback(
-    (indices: number[]): number | undefined => {
-      if (!gameState || !gameState.turn) {
-        return undefined;
-      }
-
-      for (let i = 0; i < indices.length; i++) {
-        if (gameState.turn.idx === indices[i]) {
-          return i;
-        }
-      }
-      return undefined;
-    },
-    [gameState]
-  );
 
   /**
    * 페이지 접근 시 로그인 상태 확인
@@ -145,15 +99,13 @@ const GamePage = () => {
   }, [socket]);
 
   // [이벤트 등록] 새로운 게임이 시작 되었을 때 발생하는 이벤트
-  // prev game state가 undefined이면 어떻게하지?
   useEffect(() => {
     if (socket) {
-      socket.on('onGameStarted', ({ state }) => {
-        setGameState((prev) => {
-          if (prev) {
-            return { ...prev, state };
-          }
-        });
+      // 요거 currentRound랑 turn은 받을 필요 없는데 억지로 받고있음..
+      // (prev로 받을 수 있도록 처리하고 서버에서도 데이터 전달하지 않도록 수정하자)
+      // onRoundEnded도 동일
+      socket.on('onGameStarted', ({ state, currentRound, turn }) => {
+        setGameState({ state, currentRound, turn });
       });
     }
 
@@ -184,12 +136,8 @@ const GamePage = () => {
   // prev game state가 undefined이면 어떻게하지?
   useEffect(() => {
     if (socket) {
-      socket.on('onRoundEnded', ({ answer, winPlayer, state }) => {
-        setGameState((prev) => {
-          if (prev) {
-            return { ...prev, state };
-          }
-        });
+      socket.on('onRoundEnded', ({ answer, winPlayer, state, currentRound, turn }) => {
+        setGameState({ state, currentRound, turn });
         // if (room.master.uuid === uuid) {
         //   setTimeout(() => {
         //     socket.emit('roundStart', { roomId });
@@ -220,24 +168,9 @@ const GamePage = () => {
 
   return (
     <Container>
-      {room && (
-        <PlayerList
-          listItem={[playerList[0], playerList[2], playerList[4]]}
-          turnIndex={
-            gameState?.state === 'play' && gameState?.turn ? getTurnIndex([0, 2, 4]) : undefined
-          }
-        />
-      )}
-      <GameBoard roomId={roomId} state={gameState?.state} />
-      {isGameAvailable() && <GameStartButton onClick={startGame} />}
-      {room && (
-        <PlayerList
-          listItem={[playerList[1], playerList[3], playerList[5]]}
-          turnIndex={
-            gameState?.state === 'play' && gameState?.turn ? getTurnIndex([1, 3, 5]) : undefined
-          }
-        />
-      )}
+      <PlayerList listItem={[playerList[0], playerList[2], playerList[4]]} indices={[0, 2, 4]} />
+      <GameBoard roomId={roomId} />
+      <PlayerList listItem={[playerList[1], playerList[3], playerList[5]]} indices={[1, 3, 5]} />
     </Container>
   );
 };

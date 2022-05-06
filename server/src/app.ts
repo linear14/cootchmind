@@ -122,6 +122,20 @@ const startRound = (room: Room) => {
   }
 };
 
+const endGame = (room: Room) => {
+  room.state = 'ready';
+  for (let i = 0; i < 6; i++) {
+    const player = room.players[i];
+    if (player !== null) {
+      player.answerCnt = 0;
+    }
+  }
+  room.quizIndices = [];
+  room.currentRound = 0;
+
+  io.to(room.roomId).emit('onGameEnded');
+};
+
 io.on('connection', (socket) => {
   socketToUUID.set(socket.id, undefined);
 
@@ -304,7 +318,11 @@ io.on('connection', (socket) => {
         player.isReady = false;
       }
     }
-    io.to(roomId).emit('onGameStarted', { state: room.state });
+    io.to(roomId).emit('onGameStarted', {
+      state: room.state,
+      currentRound: room.currentRound,
+      turn: room.turn
+    });
 
     setTimeout(() => {
       const room = rooms.get(roomId);
@@ -336,7 +354,26 @@ io.on('connection', (socket) => {
           player.answerCnt++;
         }
         room.state = 'interval';
-        io.to(roomId).emit('onRoundEnded', { answer, winPlayer: player, state: room.state });
+        io.to(roomId).emit('onRoundEnded', {
+          answer,
+          winPlayer: player,
+          state: room.state,
+          currentRound: room.currentRound,
+          turn: room.turn
+        });
+
+        setTimeout(() => {
+          const room = rooms.get(roomId);
+          if (!room) {
+            socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+            return;
+          }
+          if (room.currentRound === 10) {
+            endGame(room);
+          } else {
+            startRound(room);
+          }
+        }, 3000);
       }
     }
   });
@@ -368,28 +405,6 @@ io.on('connection', (socket) => {
     }
 
     io.to(roomId).emit('onDraw', pointList);
-  });
-
-  // 추가 필요: 모든 플레이어의 ready 신호가 떨어지면 게임이 종료되도록
-  // 15. 게임 종료 - 완료
-  socket.on('endGame', ({ roomId }) => {
-    const room = rooms.get(roomId);
-    if (!room) {
-      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
-      return;
-    }
-
-    room.state === 'ready';
-    for (let i = 0; i < 6; i++) {
-      const player = room.players[i];
-      if (player !== null) {
-        player.answerCnt = 0;
-      }
-    }
-    room.quizIndices = [];
-    room.currentRound = 0;
-
-    io.to(roomId).emit('onGameEnded');
   });
 
   // 16. 사용자 추방 - 완료

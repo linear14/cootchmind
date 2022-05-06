@@ -7,6 +7,9 @@ import GamePage from 'pages/GamePage';
 import LoginPage from 'pages/LoginPage';
 import RoomListPage from 'pages/RoomListPage';
 import { UserContextProvider } from 'context/user';
+import { GameStateContextProvider } from 'context/game';
+import { RoomContextProvider } from 'context/room';
+import { PlayerListContextProvider } from 'context/playerList';
 
 function App() {
   return (
@@ -18,7 +21,18 @@ function App() {
             <Routes>
               <Route path='/' element={<RoomListPage />} />
               <Route path='/login' element={<LoginPage />} />
-              <Route path='/game/:roomId' element={<GamePage />} />
+              <Route
+                path='/game/:roomId'
+                element={
+                  <RoomContextProvider>
+                    <PlayerListContextProvider>
+                      <GameStateContextProvider>
+                        <GamePage />
+                      </GameStateContextProvider>
+                    </PlayerListContextProvider>
+                  </RoomContextProvider>
+                }
+              />
               <Route path='*' element={<div>Not Found</div>} />
             </Routes>
           </Layout>

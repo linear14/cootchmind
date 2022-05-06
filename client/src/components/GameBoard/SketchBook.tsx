@@ -3,7 +3,6 @@ import styled from 'styled-components';
 
 interface SketchBookProps {
   canvasWidth?: number;
-  state?: string;
 }
 
 const Container = styled.div`
@@ -17,27 +16,8 @@ const Canvas = styled.canvas`
   cursor: crosshair;
 `;
 
-const StartGameBanner = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 36px;
-  font-weight: bold;
-  background-color: white;
-  z-index: 5;
-
-  &::after {
-    content: '게임 시작!';
-  }
-`;
-
 const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
-  ({ canvasWidth, state }, canvasRef) => {
+  ({ canvasWidth }, canvasRef) => {
     const [isDrawing, setDrawing] = useState<boolean>(false);
     const contextRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -158,7 +138,6 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
           onMouseUp={drawEnd}
           onMouseLeave={drawEnd}
         />
-        {state === 'start' && <StartGameBanner />}
       </Container>
     );
   }

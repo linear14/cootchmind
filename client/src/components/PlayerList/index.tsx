@@ -1,3 +1,5 @@
+import { GameStateContext } from 'context/game';
+import { useContext, useMemo } from 'react';
 import styled from 'styled-components';
 
 import { Player } from 'types/player';
@@ -16,10 +18,29 @@ const Container = styled.div`
 
 interface PlayerListProps {
   listItem: (Player | null)[];
-  turnIndex?: number;
+  indices: number[];
 }
 
-const PlayerList = ({ listItem, turnIndex }: PlayerListProps) => {
+const PlayerList = ({ listItem, indices }: PlayerListProps) => {
+  const { state, turn } = useContext(GameStateContext);
+
+  const turnIndex = useMemo(() => {
+    if (!state || !turn) {
+      return undefined;
+    }
+
+    if (state !== 'play') {
+      return undefined;
+    }
+
+    for (let i = 0; i < indices.length; i++) {
+      if (turn.idx === indices[i]) {
+        return i;
+      }
+    }
+    return undefined;
+  }, [indices, state, turn]);
+
   return (
     <Container>
       {listItem.map((item, idx) => (
