@@ -371,7 +371,8 @@ io.on('connection', (socket) => {
           winPlayer: player,
           state: room.state,
           currentRound: room.currentRound,
-          turn: room.turn
+          turn: room.turn,
+          players: room.players
         });
 
         setTimeout(() => {
