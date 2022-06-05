@@ -153,7 +153,7 @@ const GamePage = () => {
   // prev game state가 undefined이면 어떻게하지?
   useEffect(() => {
     if (socket) {
-      socket.on('onRoundEnded', ({ answer, winPlayer, state, currentRound, turn }) => {
+      socket.on('onRoundEnded', ({ answer, winPlayer, state, currentRound, turn, players }) => {
         setGameState({ state, currentRound, turn });
       });
 
