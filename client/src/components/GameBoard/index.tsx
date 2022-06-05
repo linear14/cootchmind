@@ -1,4 +1,5 @@
 import { GameStateContext } from 'context/game';
+import { PlayerListContext } from 'context/playerList';
 import { SocketContext } from 'context/socket';
 import { useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
@@ -38,6 +39,7 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
 
   const { state, currentRound, turn, setGameState } = useContext(GameStateContext);
+  const { setPlayerList } = useContext(PlayerListContext);
   const [gameResult, setGameResult] = useState<{ rank: number; name: string; answerCnt: number }[]>(
     []
   );
@@ -51,12 +53,28 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
     };
   }, []);
 
+  // [이벤트 등록] 해당 라운드가 종료 되었을 때 발생하는 이벤트
+  // prev game state가 undefined이면 어떻게하지?
+  useEffect(() => {
+    if (socket) {
+      socket.on('onRoundEnded', ({ answer, winPlayer, state, currentRound, turn, players }) => {
+        setGameState({ state, currentRound, turn });
+        setPlayerList(players);
+      });
+
+      return () => {
+        socket.off('onRoundEnded');
+      };
+    }
+  }, [socket, setGameState, setPlayerList]);
+
   // [이벤트 등록] 전체 게임이 종료 되었을 때 발생하는 이벤트
   useEffect(() => {
     if (socket) {
-      socket.on('onGameEnded', ({ result, newGameState }) => {
+      socket.on('onGameEnded', ({ result, newGameState, players }) => {
         setGameState(newGameState);
         setGameResult(result);
+        setPlayerList(players);
 
         setTimeout(() => {
           setGameState({ state: 'ready', currentRound: 0, turn: undefined });
@@ -67,9 +85,7 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
         socket.off('onGameEnded');
       };
     }
-  }, [socket, setGameState]);
-
-  console.log(state);
+  }, [socket, setGameState, setPlayerList]);
 
   return (
     <Container ref={boardRef}>

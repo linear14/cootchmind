@@ -174,7 +174,7 @@ const endGame = (room: Room) => {
     turn: undefined
   };
 
-  io.to(room.roomId).emit('onGameEnded', { result, newGameState });
+  io.to(room.roomId).emit('onGameEnded', { result, newGameState, players: room.players });
 };
 
 io.on('connection', (socket) => {

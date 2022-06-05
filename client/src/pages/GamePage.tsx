@@ -149,20 +149,6 @@ const GamePage = () => {
     }
   }, [socket, setGameState]);
 
-  // [이벤트 등록] 해당 라운드가 종료 되었을 때 발생하는 이벤트
-  // prev game state가 undefined이면 어떻게하지?
-  useEffect(() => {
-    if (socket) {
-      socket.on('onRoundEnded', ({ answer, winPlayer, state, currentRound, turn, players }) => {
-        setGameState({ state, currentRound, turn });
-      });
-
-      return () => {
-        socket.off('onRoundEnd');
-      };
-    }
-  }, [socket, setGameState]);
-
   // [이벤트 등록] 방장이 방을 나가는 경우 - 방 폭파
   useEffect(() => {
     if (socket) {
