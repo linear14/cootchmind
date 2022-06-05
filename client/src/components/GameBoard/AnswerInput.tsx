@@ -32,12 +32,9 @@ const AnswerInput = () => {
       if (state === 'play' && turn?.uuid === uuid) return;
 
       if (state && roomId && uuid && message) {
-        console.log(message);
         if (state === 'play') {
-          console.log('played');
           socket.emit('submitAnswer', { uuid, roomId, message });
         } else {
-          console.log('chat');
           socket.emit('chatInGame', { uuid, roomId, message });
         }
       }

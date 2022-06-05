@@ -126,12 +126,10 @@ const startRound = (room: Room) => {
         }
       }, 3000);
     } else {
-      console.log('플레이어 정보가 소멸되었습니다. (startRound)');
       io.to(room.roomId).emit('onError', { message: '플레이어 정보가 소멸되었습니다.' });
       return;
     }
   } else {
-    console.log('플레이어가 존재하지 않습니다. (startRound)');
     io.to(room.roomId).emit('onError', { message: '플레이어가 존재하지 않습니다.' });
     return;
   }
@@ -368,7 +366,6 @@ io.on('connection', (socket) => {
     setTimeout(() => {
       const room = rooms.get(roomId);
       if (!room) {
-        console.log('방이 없어요 - startGame (timeout)');
         socket.emit('onError', { message: '존재하지 않는 방입니다.' });
         return;
       }
@@ -447,8 +444,8 @@ io.on('connection', (socket) => {
       return;
     }
 
-    console.log(`그림을 그리는데 소요된 시간: ${time}ms`);
-    console.log(pointList);
+    // console.log(`그림을 그리는데 소요된 시간: ${time}ms`);
+    // console.log(pointList);
 
     io.to(roomId).emit('onDraw', { time, pointList });
   });
