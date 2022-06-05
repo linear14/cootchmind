@@ -84,7 +84,7 @@ const GamePage = () => {
     return () => {
       socket.off('onRoomEntered');
     };
-  }, [socket]);
+  }, [socket, setGameState, setPlayerList, setRoom]);
 
   // [이벤트 등록] 플레이어 변동이 있을 경우에 발생하는 이벤트
   useEffect(() => {
@@ -96,7 +96,7 @@ const GamePage = () => {
     return () => {
       socket.off('onPlayerRefreshed');
     };
-  }, [socket]);
+  }, [socket, setPlayerList]);
 
   // [이벤트 등록] 새로운 게임이 시작 되었을 때 발생하는 이벤트
   useEffect(() => {
@@ -112,7 +112,7 @@ const GamePage = () => {
     return () => {
       socket.off('onGameStart');
     };
-  }, [socket]);
+  }, [socket, setGameState]);
 
   // [이벤트 등록] 새로운 라운드가 준비 되었을 때 발생하는 이벤트
   useEffect(() => {
@@ -130,7 +130,7 @@ const GamePage = () => {
         socket.off('onRoundReady');
       };
     }
-  }, [socket]);
+  }, [socket, setGameState]);
 
   // [이벤트 등록] 새로운 라운드가 시작 되었을 때 발생하는 이벤트
   useEffect(() => {
@@ -147,7 +147,7 @@ const GamePage = () => {
         socket.off('onRoundStarted');
       };
     }
-  }, [socket]);
+  }, [socket, setGameState]);
 
   // [이벤트 등록] 해당 라운드가 종료 되었을 때 발생하는 이벤트
   // prev game state가 undefined이면 어떻게하지?
@@ -155,18 +155,13 @@ const GamePage = () => {
     if (socket) {
       socket.on('onRoundEnded', ({ answer, winPlayer, state, currentRound, turn }) => {
         setGameState({ state, currentRound, turn });
-        // if (room.master.uuid === uuid) {
-        //   setTimeout(() => {
-        //     socket.emit('roundStart', { roomId });
-        //   }, 3000);
-        // }
       });
 
       return () => {
         socket.off('onRoundEnd');
       };
     }
-  }, [socket]);
+  }, [socket, setGameState]);
 
   // [이벤트 등록] 방장이 방을 나가는 경우 - 방 폭파
   useEffect(() => {

@@ -14,6 +14,7 @@ const io = new Server(server, {
   }
 });
 
+const ROUND_NUM = 3;
 const CHAT_CHANNEL = 'chat_channel';
 const rooms = new Map<string, Room>();
 const socketToUUID = new Map<string, string | undefined>(); // socketId - uuid, undefined
@@ -125,16 +126,37 @@ const startRound = (room: Room) => {
         }
       }, 3000);
     } else {
+      console.log('플레이어 정보가 소멸되었습니다. (startRound)');
       io.to(room.roomId).emit('onError', { message: '플레이어 정보가 소멸되었습니다.' });
       return;
     }
   } else {
+    console.log('플레이어가 존재하지 않습니다. (startRound)');
     io.to(room.roomId).emit('onError', { message: '플레이어가 존재하지 않습니다.' });
     return;
   }
 };
 
 const endGame = (room: Room) => {
+  const playerList = (room.players.filter((player) => player !== null) as Player[]).sort((a, b) =>
+    a.answerCnt < b.answerCnt ? 1 : -1
+  );
+  const result = playerList.reduce<{ rank: number; name: string; answerCnt: number }[]>(
+    (pre, cur, idx) => {
+      if (idx === 0) {
+        pre.push({ rank: 1, name: cur.name, answerCnt: cur.answerCnt });
+      } else {
+        if (pre[pre.length - 1].answerCnt === cur.answerCnt) {
+          pre.push({ rank: pre[pre.length - 1].rank, name: cur.name, answerCnt: cur.answerCnt });
+        } else {
+          pre.push({ rank: idx + 1, name: cur.name, answerCnt: cur.answerCnt });
+        }
+      }
+      return pre;
+    },
+    []
+  );
+
   room.state = 'ready';
   for (let i = 0; i < 6; i++) {
     const player = room.players[i];
@@ -144,8 +166,15 @@ const endGame = (room: Room) => {
   }
   room.quizIndices = [];
   room.currentRound = 0;
+  room.turn = undefined;
 
-  io.to(room.roomId).emit('onGameEnded');
+  const newGameState = {
+    state: 'end',
+    currentRound: 0,
+    turn: undefined
+  };
+
+  io.to(room.roomId).emit('onGameEnded', { result, newGameState });
 };
 
 io.on('connection', (socket) => {
@@ -339,6 +368,7 @@ io.on('connection', (socket) => {
     setTimeout(() => {
       const room = rooms.get(roomId);
       if (!room) {
+        console.log('방이 없어요 - startGame (timeout)');
         socket.emit('onError', { message: '존재하지 않는 방입니다.' });
         return;
       }
@@ -380,7 +410,7 @@ io.on('connection', (socket) => {
             socket.emit('onError', { message: '존재하지 않는 방입니다.' });
             return;
           }
-          if (room.currentRound === 10) {
+          if (room.currentRound === ROUND_NUM) {
             endGame(room);
           } else {
             startRound(room);
