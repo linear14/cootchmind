@@ -432,7 +432,7 @@ io.on('connection', (socket) => {
   });
 
   // 14. 그림 데이터 전송 - 완료
-  socket.on('submitPaint', ({ uuid, roomId, pointList }) => {
+  socket.on('submitPaint', ({ uuid, roomId, time, pointList }) => {
     const room = rooms.get(roomId);
     if (!room) {
       socket.emit('onError', { message: '존재하지 않는 방입니다.' });
@@ -447,7 +447,10 @@ io.on('connection', (socket) => {
       return;
     }
 
-    io.to(roomId).emit('onDraw', pointList);
+    console.log(`그림을 그리는데 소요된 시간: ${time}ms`);
+    console.log(pointList);
+
+    io.to(roomId).emit('onDraw', { time, pointList });
   });
 
   // 16. 사용자 추방 - 완료
