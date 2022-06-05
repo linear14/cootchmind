@@ -453,6 +453,25 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('onDraw', { time, pointList });
   });
 
+  // 15. 그림 전체 지우기
+  socket.on('clearPaint', ({ uuid, roomId }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+      return;
+    }
+
+    if (room.turn?.uuid !== uuid) {
+      return;
+    }
+
+    if (room.state !== 'play') {
+      return;
+    }
+
+    io.to(roomId).except(socket.id).emit('onClearPaint');
+  });
+
   // 16. 사용자 추방 - 완료
   socket.on('kickUser', ({ roomId, kicekdUUID }) => {
     const room = rooms.get(roomId);

@@ -242,6 +242,28 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
     }, [socket]);
 
     useEffect(() => {
+      if (socket) {
+        socket.on('onClearPaint', () => {
+          const canvas = (canvasRef as React.MutableRefObject<HTMLCanvasElement | null>).current;
+          const context = contextRef.current;
+
+          if (canvas && context) {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            setFromServerPointList([]);
+            pointerToDrawingServerItems.current = 0;
+            if (animationRef.current) {
+              cancelAnimationFrame(animationRef.current);
+            }
+          }
+        });
+
+        return () => {
+          socket.off('onClearPaint');
+        };
+      }
+    }, [socket, canvasRef]);
+
+    useEffect(() => {
       const isWaitingServerDrawingData = state === 'play' && turn?.uuid !== uuid;
 
       function drawFromServer() {
@@ -280,6 +302,25 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
       }
       animationRef.current = requestAnimationFrame(drawFromServer);
     }, [state, turn, uuid, fromServerPointList, pointerToDrawingServerItems, drawServerItem]);
+
+    // 라운드가 종료 될 때 마다 데이터 초기화가 필요합니다.
+    useEffect(() => {
+      if (state === 'interval') {
+        const canvas = (canvasRef as React.MutableRefObject<HTMLCanvasElement | null>).current;
+        const context = contextRef.current;
+
+        if (canvas && context) {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          setStartDrawingTime(0);
+          setFromServerPointList([]);
+          pointerToDrawingServerItems.current = 0;
+          toServerPointListRef.current = [];
+          if (animationRef.current) {
+            cancelAnimationFrame(animationRef.current);
+          }
+        }
+      }
+    }, [state, canvasRef]);
 
     if (!canvasWidth) return null;
     return (
