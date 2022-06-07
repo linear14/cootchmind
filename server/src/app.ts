@@ -387,7 +387,7 @@ io.on('connection', (socket) => {
       const currentRound = room.currentRound;
       const question = quizItemList[room.quizIndices[currentRound - 1]];
 
-      if (question.answer === message) {
+      if (question.answer.replace(/(\s*)/g, '') === message.replace(/(\s*)/g, '')) {
         const player = room.players.find((player) => player?.uuid === uuid);
         if (player && player !== null) {
           player.answerCnt++;
