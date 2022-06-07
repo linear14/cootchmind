@@ -3,6 +3,7 @@ import { PlayerListContext } from 'context/playerList';
 import { SocketContext } from 'context/socket';
 import { useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
+import { GameResult, RoundResult } from 'types/result';
 import AnswerInput from './AnswerInput';
 import GameResultBanner from './Banners/GameResultBanner';
 import NextGameBanner from './Banners/NextGameBanner';
@@ -40,9 +41,8 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
 
   const { state, currentRound, turn, setGameState } = useContext(GameStateContext);
   const { setPlayerList } = useContext(PlayerListContext);
-  const [gameResult, setGameResult] = useState<{ rank: number; name: string; answerCnt: number }[]>(
-    []
-  );
+  const [roundResult, setRoundResult] = useState<RoundResult>();
+  const [gameResult, setGameResult] = useState<GameResult[]>([]);
 
   useEffect(() => {
     setCanvasWidth(boardRef.current?.offsetWidth);
@@ -60,6 +60,7 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
       socket.on('onRoundEnded', ({ answer, winPlayer, state, currentRound, turn, players }) => {
         setGameState({ state, currentRound, turn });
         setPlayerList(players);
+        setRoundResult({ round: currentRound, winPlayer, answer });
       });
 
       return () => {
@@ -98,7 +99,7 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
         {state && state === 'readyRound' && currentRound && turn && (
           <NextGameBanner currentRound={currentRound} name={turn?.name} />
         )}
-        {state && state === 'interval' && <RoundResultBanner />}
+        {state && state === 'interval' && <RoundResultBanner result={roundResult} />}
         {state && state === 'end' && <GameResultBanner result={gameResult} />}
       </BoardContainer>
       <Palette canvasRef={canvasRef} />

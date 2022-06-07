@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { GameResult } from 'types/result';
 
 const Container = styled.div`
   position: absolute;
@@ -32,11 +33,11 @@ const PlayerName = styled.span``;
 
 const AnswerCount = styled.span``;
 
-const GameResultBanner = ({
-  result
-}: {
-  result: { rank: number; name: string; answerCnt: number }[];
-}) => {
+interface Props {
+  result: GameResult[];
+}
+
+const GameResultBanner = ({ result }: Props) => {
   return (
     <Container>
       <Title>게임 결과</Title>
