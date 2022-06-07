@@ -418,6 +418,44 @@ io.on('connection', (socket) => {
     }
   });
 
+  // xx. 라운드 강제 종료 (타이머 종료, 진행중 유저 나가기 등)
+  socket.on('forceStopRound', ({ uuid, roomId }) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+      return;
+    }
+
+    if (room.state === 'play') {
+      // endRound({ force: true });
+      const currentRound = room.currentRound;
+      const question = quizItemList[room.quizIndices[currentRound - 1]];
+
+      room.state = 'interval';
+      io.to(roomId).emit('onRoundEnded', {
+        answer: question.answer,
+        winPlayer: null,
+        state: room.state,
+        currentRound: room.currentRound,
+        turn: room.turn,
+        players: room.players
+      });
+
+      setTimeout(() => {
+        const room = rooms.get(roomId);
+        if (!room) {
+          socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+          return;
+        }
+        if (room.currentRound === ROUND_NUM) {
+          endGame(room);
+        } else {
+          startRound(room);
+        }
+      }, 3000);
+    }
+  });
+
   // 13. 게임 내 채팅 - 완료
   socket.on('chatInGame', ({ uuid, roomId, message }) => {
     const room = rooms.get(roomId);

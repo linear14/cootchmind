@@ -68,8 +68,8 @@ const Timer = ({ playTime }: TimerProps) => {
     if (gameState === 'play' && timerState === TimerState.RUNNING && remainSec === 0) {
       stopTimer();
       if (turn?.uuid === uuid) {
-        console.log('passedPlayTime실행');
-        socket.emit('passedPlayTime', { uuid, roomId });
+        console.log('forceStopRound실행');
+        socket.emit('forceStopRound', { uuid, roomId });
       }
     }
   }, [gameState, remainSec, roomId, uuid, socket, timerState, turn?.uuid, stopTimer]);
