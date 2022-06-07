@@ -89,7 +89,7 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
 
   return (
     <Container ref={boardRef}>
-      {roomId && <Timer playTime={10} roomId={roomId} />}
+      {roomId && <Timer playTime={10} />}
       <BoardContainer>
         <SketchBook canvasWidth={canvasWidth} ref={canvasRef} />
         {state && state === 'ready' && <GameStartButton />}

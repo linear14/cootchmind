@@ -1,7 +1,10 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { SocketContext } from 'context/socket';
+import { RoomContext } from 'context/room';
+import { GameStateContext } from 'context/game';
+import { UserContext } from 'context/user';
 
 const Container = styled.div`
   width: 160px;
@@ -20,58 +23,56 @@ const Container = styled.div`
 `;
 
 enum TimerState {
-  START,
+  RUNNING,
   END
 }
 
 interface TimerProps {
   playTime: number;
-  roomId: string;
 }
 
-const Timer = ({ playTime, roomId }: TimerProps) => {
-  const [state, setState] = useState<TimerState>(TimerState.END);
+const Timer = ({ playTime }: TimerProps) => {
+  const socket = useContext(SocketContext);
+  const { roomId } = useContext(RoomContext);
+  const { state: gameState, turn } = useContext(GameStateContext);
+  const [timerState, setTimerState] = useState<TimerState>(TimerState.END);
+  const { uuid } = useContext(UserContext);
+
   const [remainSec, setRemainSec] = useState<number>(0);
   const [m, s] = [Math.floor(remainSec / 60), remainSec % 60];
   const timerIntervalRef = useRef<NodeJS.Timer>();
-  const socket = useContext(SocketContext);
+
+  const startTimer = useCallback(() => {
+    setRemainSec(playTime);
+    setTimerState(TimerState.RUNNING);
+    timerIntervalRef.current = setInterval(() => setRemainSec((prev) => prev - 1), 1000);
+  }, [playTime]);
+
+  const stopTimer = useCallback(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      setTimerState(TimerState.END);
+      setRemainSec(0);
+    }
+  }, []);
 
   useEffect(() => {
-    if (state === TimerState.END) {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
+    if (gameState === 'play') {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+  }, [gameState, startTimer, stopTimer]);
+
+  useEffect(() => {
+    if (gameState === 'play' && timerState === TimerState.RUNNING && remainSec === 0) {
+      stopTimer();
+      if (turn?.uuid === uuid) {
+        console.log('passedPlayTime실행');
+        socket.emit('passedPlayTime', { uuid, roomId });
       }
-    } else if (state === TimerState.START) {
-      timerIntervalRef.current = setInterval(() => setRemainSec((prev) => prev - 1), 1000);
     }
-  }, [state]);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on('onRoundStart', () => {
-        setRemainSec(playTime);
-        setState(TimerState.START);
-      });
-
-      socket.on('onRoundEnd', () => {
-        setRemainSec(0);
-        setState(TimerState.END);
-      });
-
-      return () => {
-        socket.off('onRoundStart');
-        socket.off('onRoundEnd');
-      };
-    }
-  }, [socket, playTime]);
-
-  if (state === TimerState.START && remainSec === 0) {
-    setState(TimerState.END);
-
-    // // 이렇게 하면 안되고 그냥 전역으로 관리하던지 방식을 바꾸자
-    // // (모든 유저들이 끝났음을 알릴 때 방장이 emit하던지)
-    // socket.emit('roundEnd', { roomId, uuid });
-  }
+  }, [gameState, remainSec, roomId, uuid, socket, timerState, turn?.uuid, stopTimer]);
 
   return (
     <Container>
