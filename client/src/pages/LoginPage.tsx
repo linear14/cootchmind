@@ -16,8 +16,10 @@ const Container = styled.div`
 
 const LoginPage = () => {
   const [isLoading, setLoading] = useState(true);
-  const navigate = useNavigate();
+
   const { setUser } = useContext(UserContext);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const { playerName, uuid } = getLocalStorageUser();
