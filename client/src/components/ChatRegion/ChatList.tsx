@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { Chat } from 'types/chat';
@@ -91,4 +91,4 @@ const ChatList = ({ items }: ChatListProps) => {
   );
 };
 
-export default ChatList;
+export default React.memo(ChatList);

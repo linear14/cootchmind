@@ -75,4 +75,4 @@ const ChatRegion = () => {
   );
 };
 
-export default ChatRegion;
+export default React.memo(ChatRegion);

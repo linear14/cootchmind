@@ -1,3 +1,4 @@
+import React from 'react';
 import styled from 'styled-components';
 import { Chat } from 'types/chat';
 
@@ -14,4 +15,4 @@ const ChatItem = ({ item }: ChatProps) => {
   return <Container>{`${item.playerName}: ${item.message}`}</Container>;
 };
 
-export default ChatItem;
+export default React.memo(ChatItem);

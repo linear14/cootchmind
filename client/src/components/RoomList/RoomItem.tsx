@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import React, { useCallback } from 'react';
 import styled, { css } from 'styled-components';
 import { RoomListItem } from 'types/room';
 
@@ -98,4 +98,4 @@ const RoomItem = ({ item, onClickItem }: RoomItemProps) => {
   );
 };
 
-export default RoomItem;
+export default React.memo(RoomItem);

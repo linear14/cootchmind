@@ -1,7 +1,7 @@
 import { SocketContext } from 'context/socket';
 import { UserContext } from 'context/user';
 import useCheckValidUser from 'helpers/useCheckValidUser';
-import { useCallback, useContext } from 'react';
+import React, { useCallback, useContext } from 'react';
 import styled from 'styled-components';
 
 import { RoomListItem } from 'types/room';
@@ -89,4 +89,4 @@ const RoomList = ({ listItem, onShowCreateRoomModal, onRefreshRoomList }: RoomLi
   );
 };
 
-export default RoomList;
+export default React.memo(RoomList);
