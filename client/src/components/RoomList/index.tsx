@@ -10,23 +10,51 @@ import RoomItem from './RoomItem';
 
 const Container = styled.div`
   flex: 1;
-  border: 1px solid black;
+  padding: 1rem;
 
   display: flex;
   flex-direction: column;
+  gap: 1rem;
 `;
 
 const ListContainer = styled.div`
+  position: relative;
+  height: 80%;
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
 `;
 
+const BottomContainer = styled.div`
+  position: relative;
+  height: 12%;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
+
+const Button = styled.button.attrs({
+  type: 'button'
+})`
+  width: 84px;
+  height: 100%;
+  border: 1px solid black;
+  cursor: pointer;
+`;
+
+const Notice = styled.div`
+  font-size: 14px;
+  line-height: 16px;
+`;
+
 interface RoomListProps {
-  listItem: RoomListItem[];
+  listItem: (RoomListItem | null)[];
+  onShowCreateRoomModal: () => void;
+  onRefreshRoomList: () => void;
 }
 
-const RoomList = ({ listItem }: RoomListProps) => {
+const RoomList = ({ listItem, onShowCreateRoomModal, onRefreshRoomList }: RoomListProps) => {
   const { uuid, playerName } = useContext(UserContext);
   const socket = useContext(SocketContext);
   const check = useCheckValidUser();
@@ -43,11 +71,20 @@ const RoomList = ({ listItem }: RoomListProps) => {
   return (
     <Container>
       <ListContainer>
-        {listItem.map((room) => (
-          <RoomItem key={room.roomId} item={room} onClickItem={tryEnterRoom} />
-        ))}
+        {listItem.map((room, idx) => {
+          if (room) {
+            return <RoomItem key={room.roomId} item={room} onClickItem={tryEnterRoom} />;
+          } else {
+            return <RoomItem key={`ri${idx}`} />;
+          }
+        })}
       </ListContainer>
-      <NavButtons />
+      <BottomContainer>
+        <Button onClick={onShowCreateRoomModal}>방만들기</Button>
+        <Button onClick={onRefreshRoomList}>새로고침</Button>
+        <Notice>{`현재 안정적인 서버 운용을 위해 최대 10개의 방을 개설할 수 있습니다.`}</Notice>
+      </BottomContainer>
+      {/* <NavButtons /> */}
     </Container>
   );
 };

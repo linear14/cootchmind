@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { SocketContext } from 'context/socket';
 import ChatRegion from 'components/ChatRegion';
@@ -30,33 +30,11 @@ const Body = styled.div`
   display: flex;
 `;
 
-const CreateRoomBtn = styled.div`
-  width: 240px;
-  height: 60px;
-  font-size: 24px;
-  line-height: 60px;
-  text-align: center;
+const Logo = styled.span``;
 
-  border: 1px solid black;
-
-  &::after {
-    content: '방만들기';
-  }
-`;
-
-const RoomRefreshBtn = styled.div`
-  width: 240px;
-  height: 60px;
-  font-size: 24px;
-  line-height: 60px;
-  text-align: center;
-
-  border: 1px solid black;
-
-  &::after {
-    content: '새로고침';
-  }
-`;
+const Button = styled.button.attrs({
+  type: 'button'
+})``;
 
 interface SocketError {
   message: string;
@@ -65,7 +43,7 @@ interface SocketError {
 
 const RoomListPage = () => {
   const { uuid, playerName, setUser } = useContext(UserContext);
-  const [roomList, setRoomList] = useState<RoomListItem[]>([]);
+  const [roomList, setRoomList] = useState<(RoomListItem | null)[]>([]);
   const [roomModal, setRoomModal] = useState<boolean>(false);
   const [error, setError] = useState<SocketError | null>(null);
   const navigate = useNavigate();
@@ -117,7 +95,7 @@ const RoomListPage = () => {
   useEffect(() => {
     if (socket) {
       socket.on('onRoomListRefreshed', (roomList: RoomListItem[]) => {
-        setRoomList(roomList);
+        setRoomList([...roomList, ...Array(10 - roomList.length).fill(null)]);
       });
     }
     return () => {
@@ -176,13 +154,16 @@ const RoomListPage = () => {
   return (
     <Container>
       <Header>
-        <CreateRoomBtn onClick={handleRoomModal} />
-        <RoomRefreshBtn onClick={refreshRoomList} />
+        <Logo>로고</Logo>
         <div>현재 사용자: {playerName}</div>
       </Header>
       <Body>
+        <RoomList
+          listItem={roomList}
+          onShowCreateRoomModal={handleRoomModal}
+          onRefreshRoomList={refreshRoomList}
+        />
         <ChatRegion />
-        <RoomList listItem={roomList} />
       </Body>
       {roomModal && <RoomGeneratorModal onGenerate={createRoom} onClose={handleRoomModal} />}
       {error && <ErrorModal message={error.message} onClose={error.callback} />}
