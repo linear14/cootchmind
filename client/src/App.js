@@ -35,6 +35,7 @@ function App() {
               />
               <Route path='*' element={<div>Not Found</div>} />
             </Routes>
+            <div id='modal'></div>
           </Layout>
         </SocketContextProvider>
       </UserContextProvider>
