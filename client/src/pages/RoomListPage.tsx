@@ -21,8 +21,20 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
+  position: relative;
   height: 60px;
+  padding-right: 1rem;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid black;
+`;
+
+const HeaderRight = styled.div`
+  height: 100%;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 `;
 
 const Body = styled.div`
@@ -30,11 +42,39 @@ const Body = styled.div`
   display: flex;
 `;
 
-const Logo = styled.span``;
+const Logo = styled.img`
+  height: 100%;
+`;
+
+const CurrentUser = styled.button.attrs({
+  type: 'button'
+})`
+  height: 36px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  border: 1px solid black;
+  border-radius: 10px;
+  font-size: 14px;
+
+  span {
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
 
 const Button = styled.button.attrs({
   type: 'button'
-})``;
+})`
+  height: 40px;
+  line-height: 40px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  border: 1px solid black;
+`;
 
 interface SocketError {
   message: string;
@@ -154,8 +194,14 @@ const RoomListPage = () => {
   return (
     <Container>
       <Header>
-        <Logo>zmc</Logo>
-        <div>현재 사용자: {playerName}</div>
+        <Logo src='/images/logo.svg' />
+        <HeaderRight>
+          <CurrentUser>
+            <span>{playerName}</span>님
+          </CurrentUser>
+          <Button>공지사항</Button>
+          <Button>개발자에게 문의하기</Button>
+        </HeaderRight>
       </Header>
       <Body>
         <RoomList
