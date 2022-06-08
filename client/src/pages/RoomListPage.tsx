@@ -154,7 +154,7 @@ const RoomListPage = () => {
   return (
     <Container>
       <Header>
-        <Logo>로고</Logo>
+        <Logo>zmc</Logo>
         <div>현재 사용자: {playerName}</div>
       </Header>
       <Body>

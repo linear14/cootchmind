@@ -9,6 +9,20 @@ const Container = styled.div`
   width: 100%;
   height: 100%;
   overflow-y: scroll;
+  border: 1px solid black;
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #eeeeb2;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: white;
+  }
 `;
 
 const MoveToBottom = styled.div`

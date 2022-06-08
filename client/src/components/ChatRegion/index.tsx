@@ -7,9 +7,10 @@ import ChatList from './ChatList';
 import { UserContext } from 'context/user';
 
 const Container = styled.div`
+  position: relative;
   width: 33%;
   height: 100%;
-  border: 1px soild black;
+  padding: 1rem 1rem 1rem 0;
 
   display: flex;
   flex-direction: column;
@@ -21,6 +22,12 @@ const ChatForm = styled.form`
   height: 48px;
   line-height: 48px;
   font-size: 16px;
+`;
+
+const ChatInput = styled.input`
+  width: 100%;
+  height: 32px;
+  outline: none;
 `;
 
 const ChatRegion = () => {
@@ -62,7 +69,7 @@ const ChatRegion = () => {
     <Container>
       <ChatList items={chatListItem} />
       <ChatForm onSubmit={sendMessage}>
-        <input ref={inputRef} />
+        <ChatInput ref={inputRef} placeholder='채팅창' />
       </ChatForm>
     </Container>
   );
