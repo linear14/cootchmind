@@ -4,7 +4,6 @@ import { useState, useEffect, useContext } from 'react';
 
 import GameBoard from 'components/GameBoard';
 import PlayerList from 'components/PlayerList';
-import { getLocalStorageUser } from 'helpers/authUtil';
 import { SocketContext } from 'context/socket';
 import { Room } from 'types/room';
 import { UserContext } from 'context/user';
@@ -57,14 +56,11 @@ const GamePage = () => {
   const [isLoading, setLoading] = useState(true);
 
   /**
-   * 페이지 접근 시 로그인 상태 확인
-   * 1. 로그인 안되어 있는 경우 -> login 페이지로 이동
-   * 2. 로그인 되어있는 경우 -> Loading 플래그를 false로 바꿔주기
+   * 페이지 접근 시 url로 들어오는 경우 이전 페이지로 튕기도록 설정
    **/
   useEffect(() => {
-    const { uuid, playerName } = getLocalStorageUser();
     if (!playerName || !uuid) {
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
       return;
     }
   }, [navigate, playerName, uuid]);
