@@ -1,7 +1,7 @@
 import { SocketContext } from 'context/socket';
 import { UserContext } from 'context/user';
 import useCheckValidUser from 'helpers/useCheckValidUser';
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { RoomListItem } from 'types/room';
@@ -58,6 +58,7 @@ const RoomList = ({ listItem, onShowCreateRoomModal, onRefreshRoomList }: RoomLi
   const { uuid, playerName } = useContext(UserContext);
   const socket = useContext(SocketContext);
   const check = useCheckValidUser();
+  const [canRefreshRoomList, setCanRefreshRoomList] = useState<boolean>(true);
 
   const tryEnterRoom = useCallback(
     (roomId: string) => {
@@ -67,6 +68,17 @@ const RoomList = ({ listItem, onShowCreateRoomModal, onRefreshRoomList }: RoomLi
     },
     [check, socket, uuid, playerName]
   );
+
+  const handleRefreshRoomList = useCallback(() => {
+    if (canRefreshRoomList) {
+      onRefreshRoomList();
+      setCanRefreshRoomList(false);
+
+      setTimeout(() => {
+        setCanRefreshRoomList(true);
+      }, 3000);
+    }
+  }, [canRefreshRoomList, onRefreshRoomList]);
 
   return (
     <Container>
@@ -81,10 +93,9 @@ const RoomList = ({ listItem, onShowCreateRoomModal, onRefreshRoomList }: RoomLi
       </ListContainer>
       <BottomContainer>
         <Button onClick={onShowCreateRoomModal}>방만들기</Button>
-        <Button onClick={onRefreshRoomList}>새로고침</Button>
+        <Button onClick={handleRefreshRoomList}>새로고침</Button>
         <Notice>{`현재 안정적인 서버 운용을 위해 최대 10개의 방을 개설할 수 있습니다.`}</Notice>
       </BottomContainer>
-      {/* <NavButtons /> */}
     </Container>
   );
 };

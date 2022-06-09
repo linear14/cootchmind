@@ -9,7 +9,6 @@ const useCheckValidUser = () => {
 
   const check = useCallback(() => {
     const { uuid: localUUID, playerName: localPlayerName } = getLocalStorageUser();
-    // console.log(uuid, localUUID);
     if (uuid !== localUUID || playerName !== localPlayerName) {
       window.localStorage.removeItem('uuid');
       window.localStorage.removeItem('player-name');
