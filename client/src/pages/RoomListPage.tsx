@@ -8,7 +8,6 @@ import RoomList from 'components/RoomList';
 import RoomGeneratorModal from 'components/ui/RoomGeneratorModal';
 import { RoomListItem } from 'types/room';
 import { getLocalStorageUser } from 'helpers/authUtil';
-import ErrorModal from 'components/ui/ErrorModal';
 import { UserContext } from 'context/user';
 import useCheckValidUser from 'helpers/useCheckValidUser';
 
@@ -76,16 +75,11 @@ const Button = styled.button.attrs({
   border: 1px solid black;
 `;
 
-interface SocketError {
-  message: string;
-  callback: () => void;
-}
-
 const RoomListPage = () => {
   const { uuid, playerName, setUser } = useContext(UserContext);
   const [roomList, setRoomList] = useState<(RoomListItem | null)[]>([]);
   const [roomModal, setRoomModal] = useState<boolean>(false);
-  const [error, setError] = useState<SocketError | null>(null);
+
   const navigate = useNavigate();
   const socket = useContext(SocketContext);
   const check = useCheckValidUser();
@@ -165,30 +159,6 @@ const RoomListPage = () => {
     };
   }, [socket, navigate]);
 
-  // useEffect(() => {
-  //   socket.on(
-  //     'onError',
-  //     ({ message, closeConnection }: { message: string; closeConnection: boolean | undefined }) => {
-  //       if (closeConnection) {
-  //         setError({
-  //           message,
-  //           callback: () => {
-  //             window.localStorage.removeItem('uuid');
-  //             window.localStorage.removeItem('player-name');
-  //             navigate(`/login`, { replace: true });
-  //           }
-  //         });
-  //       } else {
-  //         setError({ message, callback: () => setError(null) });
-  //       }
-  //     }
-  //   );
-
-  //   return () => {
-  //     socket.off('onError');
-  //   };
-  // }, [socket, navigate]);
-
   if (!uuid && !playerName) return null;
 
   return (
@@ -213,7 +183,6 @@ const RoomListPage = () => {
         <ChatRegion />
       </Body>
       {roomModal && <RoomGeneratorModal onGenerate={createRoom} onClose={handleRoomModal} />}
-      {error && <ErrorModal message={error.message} onClose={error.callback} />}
     </Container>
   );
 };

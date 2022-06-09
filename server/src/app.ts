@@ -205,6 +205,13 @@ io.on('connection', (socket) => {
       return;
     }
 
+    if (rooms.size >= 10) {
+      socket.emit('onError', {
+        message: '현재 만들 수 있는 방이 없습니다.\n(총 10개까지 만들 수 있습니다)'
+      });
+      return;
+    }
+
     const roomId = Date.now().toString();
     const room: Room = {
       roomId,
