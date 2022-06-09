@@ -10,6 +10,7 @@ import { RoomListItem } from 'types/room';
 import { getLocalStorageUser } from 'helpers/authUtil';
 import { UserContext } from 'context/user';
 import useCheckValidUser from 'helpers/useCheckValidUser';
+import { GOOGLE_FORM_LINK, NOTION_LINK } from 'helpers/constants';
 
 const Container = styled.div`
   width: 100%;
@@ -68,11 +69,23 @@ const CurrentUser = styled.button.attrs({
 const Button = styled.button.attrs({
   type: 'button'
 })`
+  position: relative;
   height: 40px;
   line-height: 40px;
   padding-left: 1rem;
   padding-right: 1rem;
   border: 1px solid black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  a {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 `;
 
 const RoomListPage = () => {
@@ -82,7 +95,7 @@ const RoomListPage = () => {
 
   const navigate = useNavigate();
   const socket = useContext(SocketContext);
-  const check = useCheckValidUser();
+  const { check, initializeUser } = useCheckValidUser();
 
   const createRoom = useCallback(
     (title?: string) => {
@@ -166,12 +179,19 @@ const RoomListPage = () => {
       <Header>
         <Logo src='/images/logo.svg' />
         <HeaderRight>
-          <CurrentUser>
+          <CurrentUser onClick={initializeUser}>
             <span>{playerName}</span>님
           </CurrentUser>
-          <Button>게임설명</Button>
-          <Button>공지사항</Button>
-          <Button>개발자에게 문의하기</Button>
+          <Button>
+            <a target='_blank' href={NOTION_LINK} rel='noreferrer'>
+              공지사항
+            </a>
+          </Button>
+          <Button>
+            <a target='_blank' href={GOOGLE_FORM_LINK} rel='noreferrer'>
+              개발자에게 문의하기
+            </a>
+          </Button>
         </HeaderRight>
       </Header>
       <Body>

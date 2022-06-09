@@ -35,3 +35,9 @@ button:active {
 *::after {
   box-sizing: inherit;
 }
+
+a {
+  text-decoration: none;
+  outline: none;
+  color: black;
+}

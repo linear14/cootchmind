@@ -7,19 +7,23 @@ const useCheckValidUser = () => {
   const { uuid, playerName, setUser } = useContext(UserContext);
   const navigate = useNavigate();
 
+  const initializeUser = useCallback(() => {
+    window.localStorage.removeItem('uuid');
+    window.localStorage.removeItem('player-name');
+    setUser({ uuid: undefined, playerName: undefined });
+    navigate('/login', { replace: true });
+  }, [navigate, setUser]);
+
   const check = useCallback(() => {
     const { uuid: localUUID, playerName: localPlayerName } = getLocalStorageUser();
     if (uuid !== localUUID || playerName !== localPlayerName) {
-      window.localStorage.removeItem('uuid');
-      window.localStorage.removeItem('player-name');
-      setUser({ uuid: undefined, playerName: undefined });
-      navigate('/login', { replace: true });
+      initializeUser();
       return false;
     }
     return true;
-  }, [navigate, uuid, playerName, setUser]);
+  }, [uuid, playerName, initializeUser]);
 
-  return check;
+  return { check, initializeUser };
 };
 
 export default useCheckValidUser;

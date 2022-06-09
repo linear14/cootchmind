@@ -57,7 +57,7 @@ interface RoomListProps {
 const RoomList = ({ listItem, onShowCreateRoomModal, onRefreshRoomList }: RoomListProps) => {
   const { uuid, playerName } = useContext(UserContext);
   const socket = useContext(SocketContext);
-  const check = useCheckValidUser();
+  const { check } = useCheckValidUser();
   const [canRefreshRoomList, setCanRefreshRoomList] = useState<boolean>(true);
 
   const tryEnterRoom = useCallback(
