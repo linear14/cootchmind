@@ -26,18 +26,18 @@ const PlayerName = styled.div`
 const AnswerCount = styled.div``;
 
 const Message = styled.span`
-  width: 200px;
-  max-width: 200px;
   position: absolute;
-  left: calc(100% + 4px);
-  top: 50%;
-  transform: translateY(-50%);
+  max-width: 100%;
+  left: 0;
+  bottom: calc(100% + 8px);
   background-color: white;
   padding: 0.5rem;
   border: 1px solid black;
+  border-radius: 10px;
   z-index: 10;
   white-space: pre-wrap;
   word-break: break-all;
+  line-height: 18px;
 `;
 
 interface PlayerItemProps {
@@ -49,8 +49,6 @@ const PlayerItem = ({ player, turnHighlight }: PlayerItemProps) => {
   const socket = useContext(SocketContext);
   const [message, setMessage] = useState<string>();
   const timeoutRef = useRef<NodeJS.Timeout>();
-
-  console.log(message);
 
   useEffect(() => {
     socket.on('onChatInGame', ({ uuid, message }) => {

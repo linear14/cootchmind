@@ -15,15 +15,16 @@ import styled from 'styled-components';
 
 interface SketchBookProps {
   canvasWidth?: number;
+  canvasHeight?: number;
 }
 
 const Container = styled.div`
-  margin-top: 1rem;
-  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 1px solid black;
 `;
 
 const Canvas = styled.canvas`
-  border: 1px solid black;
   background: white;
   cursor: crosshair;
 `;
@@ -39,7 +40,7 @@ const MAX_TIME = 2000;
 const THROTTLING_TIME = 1000;
 
 const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
-  ({ canvasWidth }, canvasRef) => {
+  ({ canvasWidth, canvasHeight }, canvasRef) => {
     const socket = useContext(SocketContext);
     const { uuid } = useContext(UserContext);
     const { roomId } = useContext(RoomContext);
@@ -66,7 +67,7 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
 
     const initCanvas = useCallback(
       (canvas: HTMLCanvasElement | null) => {
-        if (!canvas || !canvasWidth) {
+        if (!canvas || !canvasWidth || !canvasHeight) {
           return;
         }
         // casvas의 실제 너비를 몇 칸으로 쪼갤건지 (많이 쪼갤수록 세밀한 작업이 가능할 것 같음)
@@ -75,9 +76,9 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
 
         // canvas의 실제 너비 / 높이
         canvas.style.width = `${canvasWidth}px`;
-        canvas.style.height = `${canvasWidth * 0.7}px`;
+        canvas.style.height = `${canvasHeight - 2}px`;
       },
-      [canvasWidth]
+      [canvasWidth, canvasHeight]
     );
 
     const initCanvasContext = useCallback(() => {
@@ -114,16 +115,17 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
           return;
         }
 
-        if (canvasWidth) {
+        if (canvasWidth && canvasHeight) {
           const { nativeEvent, button } = e;
           const { offsetX, offsetY } = nativeEvent;
-          const ratio = 2000 / canvasWidth;
+          const ratioX = 2000 / canvasWidth;
+          const ratioY = 1400 / canvasHeight;
 
           if (button < 3) {
             const width = button === 0 ? 10 : button === 1 ? 30 : 60;
             context.lineWidth = width;
             context.beginPath();
-            context.moveTo(offsetX * ratio, offsetY * ratio);
+            context.moveTo(offsetX * ratioX, offsetY * ratioY);
             setDrawing(true);
             setStartDrawingTime(Date.now());
 
@@ -136,7 +138,7 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
           }
         }
       },
-      [initCanvasContext, canvasWidth, canDraw]
+      [initCanvasContext, canvasWidth, canvasHeight, canDraw]
     );
 
     const draw = useCallback(
@@ -151,11 +153,12 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
           return;
         }
 
-        if (canvasWidth) {
+        if (canvasWidth && canvasHeight) {
           const { offsetX, offsetY } = nativeEvent;
-          const ratio = 2000 / canvasWidth;
+          const ratioX = 2000 / canvasWidth;
+          const ratioY = 1400 / canvasHeight;
 
-          context.lineTo(offsetX * ratio, offsetY * ratio);
+          context.lineTo(offsetX * ratioX, offsetY * ratioY);
           context.stroke();
 
           toServerPointListRef.current = toServerPointListRef.current.concat({
@@ -166,32 +169,34 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
           });
         }
       },
-      [isDrawing, initCanvasContext, canvasWidth, canDraw]
+      [isDrawing, initCanvasContext, canvasWidth, canvasHeight, canDraw]
     );
 
     const drawServerItem = useCallback(
       ({ offsetX, offsetY, width, color }, isStart: boolean, isEnd: boolean) => {
         const context = contextRef.current;
-        if (context && canvasWidth) {
+        if (context && canvasWidth && canvasHeight) {
           if (context.lineWidth !== width) {
             context.lineWidth = width;
           }
           if (context.strokeStyle !== color) {
             context.strokeStyle = color;
           }
-          const ratio = 2000 / canvasWidth;
+          const ratioX = 2000 / canvasWidth;
+          const ratioY = 1400 / canvasHeight;
+
           if (isStart) {
             context.beginPath();
-            context.moveTo(offsetX * ratio, offsetY * ratio);
+            context.moveTo(offsetX * ratioX, offsetY * ratioY);
           }
-          context.lineTo(offsetX * ratio, offsetY * ratio);
+          context.lineTo(offsetX * ratioX, offsetY * ratioY);
           context.stroke();
           if (isEnd) {
             context.closePath();
           }
         }
       },
-      [canvasWidth]
+      [canvasWidth, canvasHeight]
     );
 
     const drawEnd = useCallback(() => {
@@ -218,14 +223,14 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
     }, [socket, roomId, uuid, startDrawingTime, initCanvasContext, isDrawing, canDraw]);
 
     useEffect(() => {
-      if (canvasWidth && canvasRef) {
+      if (canvasWidth && canvasHeight && canvasRef) {
         const canvas = (canvasRef as React.MutableRefObject<HTMLCanvasElement | null>).current;
         if (canvas) {
           initCanvas(canvas);
           initCanvasContext();
         }
       }
-    }, [canvasWidth, canvasRef, initCanvas, initCanvasContext]);
+    }, [canvasWidth, canvasHeight, canvasRef, initCanvas, initCanvasContext]);
 
     useEffect(() => {
       if (socket) {

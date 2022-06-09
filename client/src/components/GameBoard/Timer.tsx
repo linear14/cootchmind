@@ -12,7 +12,6 @@ const Container = styled.div`
   line-height: 24px;
   border: 1px solid black;
   background-color: white;
-  margin: auto;
 
   font-size: 24px;
   font-weight: bold;

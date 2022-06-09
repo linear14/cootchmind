@@ -6,11 +6,19 @@ import { useCallback, useContext, useRef } from 'react';
 import styled from 'styled-components';
 
 const Form = styled.form`
-  width: calc(100% - 2rem);
+  position: relative;
+  width: 40%;
   height: 32px;
-  display: block;
-  margin: 1rem auto;
   border: 1px solid black;
+  padding: 0 0.5rem;
+  align-self: center;
+
+  input {
+    width: 100%;
+    height: 100%;
+    outline: none;
+    border: none;
+  }
 `;
 
 const AnswerInput = () => {
@@ -44,7 +52,7 @@ const AnswerInput = () => {
 
   return (
     <Form onSubmit={sendMessage}>
-      <input ref={inputRef} placeholder='채팅 창' />
+      <input ref={inputRef} placeholder='정답 입력(띄어쓰기 안하셔도 정답으로 인정됩니다!)' />
     </Form>
   );
 };

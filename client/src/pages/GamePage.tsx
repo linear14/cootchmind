@@ -13,14 +13,34 @@ import { User } from 'types/user';
 import { GameStateContext } from 'context/game';
 import { RoomContext } from 'context/room';
 import { PlayerListContext } from 'context/playerList';
+import AnswerInput from 'components/GameBoard/AnswerInput';
 
 const Container = styled.div`
+  position: relative;
   width: 100%;
   height: 100%;
-  background: #203d20;
+  background: white;
+  padding: 1rem;
 
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+`;
+
+const Top = styled.div`
+  position: relative;
+  width: 100%;
+  height: 68%;
+`;
+
+const Bottom = styled.div`
+  position: relative;
+  width: 100%;
+  height: 32%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1rem;
 `;
 
 const GamePage = () => {
@@ -166,8 +186,13 @@ const GamePage = () => {
 
   return (
     <Container>
-      <PlayerList />
-      <GameBoard roomId={roomId} answer={answer} />
+      <Top>
+        <GameBoard roomId={roomId} answer={answer} />
+      </Top>
+      <Bottom>
+        <PlayerList />
+        <AnswerInput />
+      </Bottom>
     </Container>
   );
 };

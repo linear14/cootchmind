@@ -4,7 +4,6 @@ import { SocketContext } from 'context/socket';
 import { useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { GameResult, RoundResult } from 'types/result';
-import AnswerInput from './AnswerInput';
 import GameResultBanner from './Banners/GameResultBanner';
 import NextGameBanner from './Banners/NextGameBanner';
 import RoundResultBanner from './Banners/RoundResultBanner';
@@ -17,15 +16,26 @@ import Timer from './Timer';
 
 const Container = styled.div`
   position: relative;
-  width: 65%;
-  border: 1px solid black;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
 `;
 
-const BoardContainer = styled.div`
+const Left = styled.div`
   position: relative;
+  width: 70%;
+`;
+
+const Right = styled.div`
+  position: relative;
+  width: 30%;
+
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
 `;
 
 interface GameBoardProps {
@@ -35,7 +45,7 @@ interface GameBoardProps {
 
 const GameBoard = ({ roomId, answer }: GameBoardProps) => {
   const socket = useContext(SocketContext);
-  const [canvasWidth, setCanvasWidth] = useState<number>();
+  const [canvasSize, setCanvasSize] = useState<{ width?: number; height?: number }>();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
 
@@ -45,12 +55,7 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
   const [gameResult, setGameResult] = useState<GameResult[]>([]);
 
   useEffect(() => {
-    setCanvasWidth(boardRef.current?.offsetWidth);
-    window.onresize = () => setCanvasWidth(boardRef.current?.offsetWidth);
-
-    return () => {
-      window.onresize = null;
-    };
+    setCanvasSize({ width: boardRef.current?.offsetWidth, height: boardRef.current?.offsetHeight });
   }, []);
 
   // [이벤트 등록] 해당 라운드가 종료 되었을 때 발생하는 이벤트
@@ -89,21 +94,26 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
   }, [socket, setGameState, setPlayerList]);
 
   return (
-    <Container ref={boardRef}>
-      {roomId && <Timer playTime={10} />}
-      <BoardContainer>
-        <SketchBook canvasWidth={canvasWidth} ref={canvasRef} />
+    <Container>
+      <Left ref={boardRef}>
+        <SketchBook
+          canvasWidth={canvasSize?.width}
+          canvasHeight={canvasSize?.height}
+          ref={canvasRef}
+        />
         {state && state === 'ready' && <GameStartButton />}
-        {answer && <CurrentWord answer={answer} />}
         {state && state === 'start' && <StartGameBanner />}
         {state && state === 'readyRound' && currentRound && turn && (
           <NextGameBanner currentRound={currentRound} name={turn?.name} />
         )}
         {state && state === 'interval' && <RoundResultBanner result={roundResult} />}
         {state && state === 'end' && <GameResultBanner result={gameResult} />}
-      </BoardContainer>
-      <Palette canvasRef={canvasRef} />
-      <AnswerInput />
+      </Left>
+      <Right>
+        {roomId && <Timer playTime={30} />}
+        <CurrentWord answer={answer} />
+        <Palette canvasRef={canvasRef} />
+      </Right>
     </Container>
   );
 };

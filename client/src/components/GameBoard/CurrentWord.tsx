@@ -1,14 +1,13 @@
 import styled from 'styled-components';
 
 const Container = styled.div<{ hidden?: boolean }>`
-  position: absolute;
-  padding: 1rem;
-  bottom: 0;
-  right: 0;
+  width: 100%;
+  height: 60px;
+  line-height: 24px;
   border: 1px solid black;
+  background-color: white;
 
-  line-height: 18px;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: bold;
 
   display: flex;
@@ -17,7 +16,7 @@ const Container = styled.div<{ hidden?: boolean }>`
 `;
 
 interface CurrentWordProps {
-  answer: string;
+  answer?: string;
 }
 
 const CurrentWord = ({ answer }: CurrentWordProps) => {

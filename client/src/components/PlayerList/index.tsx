@@ -6,14 +6,11 @@ import styled from 'styled-components';
 import PlayerItem from './PlayerItem';
 
 const Container = styled.div`
-  width: 18%;
-  background: transparent;
-  // border: 1px solid black;
+  width: 100%;
 
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 1rem;
 `;
 
 const PlayerList = () => {

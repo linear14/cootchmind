@@ -199,6 +199,7 @@ const RoomListPage = () => {
           <CurrentUser>
             <span>{playerName}</span>님
           </CurrentUser>
+          <Button>게임설명</Button>
           <Button>공지사항</Button>
           <Button>개발자에게 문의하기</Button>
         </HeaderRight>
