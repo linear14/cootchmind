@@ -183,7 +183,7 @@ const GamePage = () => {
   return (
     <Container>
       <Top>
-        <GameBoard roomId={roomId} answer={answer} />
+        <GameBoard answer={answer} />
       </Top>
       <Bottom>
         <PlayerList />

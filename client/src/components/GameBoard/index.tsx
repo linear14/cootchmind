@@ -1,5 +1,6 @@
 import { GameStateContext } from 'context/game';
 import { PlayerListContext } from 'context/playerList';
+import { RoomContext } from 'context/room';
 import { SocketContext } from 'context/socket';
 import { useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
@@ -42,11 +43,10 @@ const Right = styled.div`
 `;
 
 interface GameBoardProps {
-  roomId?: string;
   answer?: string;
 }
 
-const GameBoard = ({ roomId, answer }: GameBoardProps) => {
+const GameBoard = ({ answer }: GameBoardProps) => {
   const socket = useContext(SocketContext);
   const [canvasSize, setCanvasSize] = useState<{ width?: number; height?: number }>();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -113,8 +113,8 @@ const GameBoard = ({ roomId, answer }: GameBoardProps) => {
         {state && state === 'end' && <GameResultBanner result={gameResult} />}
       </Left>
       <Right>
-        {roomId && <Timer playTime={30} />}
-        <CurrentWord answer={answer} />
+        <Timer playTime={30} />
+        <CurrentWord answer={state && state === 'play' ? answer : ''} />
         <Palette canvasRef={canvasRef} />
       </Right>
     </Container>
