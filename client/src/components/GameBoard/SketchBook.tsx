@@ -23,8 +23,8 @@ const Canvas = styled.canvas`
 `;
 
 interface PointList {
-  offsetX: number;
-  offsetY: number;
+  rawOffsetX: number;
+  rawOffsetY: number;
   width: number;
   color: string;
 }
@@ -123,8 +123,8 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
             setStartDrawingTime(Date.now());
 
             toServerPointListRef.current = toServerPointListRef.current.concat({
-              offsetX,
-              offsetY,
+              rawOffsetX: offsetX * ratioX,
+              rawOffsetY: offsetY * ratioY,
               width: context.lineWidth,
               color: context.strokeStyle as string
             });
@@ -155,8 +155,8 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
           context.stroke();
 
           toServerPointListRef.current = toServerPointListRef.current.concat({
-            offsetX,
-            offsetY,
+            rawOffsetX: offsetX * ratioX,
+            rawOffsetY: offsetY * ratioY,
             width: context.lineWidth,
             color: context.strokeStyle as string
           });
@@ -166,7 +166,7 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
     );
 
     const drawServerItem = useCallback(
-      ({ offsetX, offsetY, width, color }, isStart: boolean, isEnd: boolean) => {
+      ({ rawOffsetX, rawOffsetY, width, color }, isStart: boolean, isEnd: boolean) => {
         const context = contextRef.current;
         if (context && canvasWidth && canvasHeight) {
           if (context.lineWidth !== width) {
@@ -175,14 +175,14 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
           if (context.strokeStyle !== color) {
             context.strokeStyle = color;
           }
-          const ratioX = 2000 / canvasWidth;
-          const ratioY = 1400 / canvasHeight;
 
           if (isStart) {
             context.beginPath();
-            context.moveTo(offsetX * ratioX, offsetY * ratioY);
+            // context.moveTo(rawOffsetX * ratioX * ratioX, rawOffsetY * ratioY * ratioY);
+            context.moveTo(rawOffsetX, rawOffsetY);
           }
-          context.lineTo(offsetX * ratioX, offsetY * ratioY);
+          // context.lineTo(rawOffsetX * ratioX * ratioX, rawOffsetY * ratioY * ratioY);
+          context.lineTo(rawOffsetX, rawOffsetY);
           context.stroke();
           if (isEnd) {
             context.closePath();
@@ -275,8 +275,8 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
 
             drawServerItem(
               {
-                offsetX: nextItem.offsetX,
-                offsetY: nextItem.offsetY,
+                rawOffsetX: nextItem.rawOffsetX,
+                rawOffsetY: nextItem.rawOffsetY,
                 width: nextItem.width,
                 color: nextItem.color
               },
