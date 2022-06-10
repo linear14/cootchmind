@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
-import styled from 'styled-components';
+import { useMemo, useRef } from 'react';
+import styled, { css } from 'styled-components';
 
 const Container = styled.div`
+  position: relative;
   padding: 1rem;
   border: 1px solid black;
 `;
@@ -17,10 +18,12 @@ const Row = styled.div`
 `;
 
 const ColorItem = styled.div<{ colorHex: string }>`
-  width: 36px;
-  height: 36px;
+  width: calc((100% - 4rem) / 5);
+  aspect-ratio: 1;
+
   border: 1px solid black;
   background-color: ${({ colorHex }) => colorHex || 'black'};
+  cursor: pointer;
 `;
 
 interface ColorListProps {

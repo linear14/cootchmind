@@ -27,11 +27,14 @@ const Container = styled.div`
 const Left = styled.div`
   position: relative;
   width: 70%;
+  height: 100%;
+  border: 1px solid black;
 `;
 
 const Right = styled.div`
   position: relative;
-  width: 30%;
+  flex: 1;
+  height: 100%;
 
   display: flex;
   flex-direction: column;

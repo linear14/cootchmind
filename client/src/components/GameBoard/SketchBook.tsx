@@ -18,14 +18,7 @@ interface SketchBookProps {
   canvasHeight?: number;
 }
 
-const Container = styled.div`
-  width: 100%;
-  height: 100%;
-  border: 1px solid black;
-`;
-
 const Canvas = styled.canvas`
-  background: white;
   cursor: crosshair;
 `;
 
@@ -76,7 +69,7 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
 
         // canvas의 실제 너비 / 높이
         canvas.style.width = `${canvasWidth}px`;
-        canvas.style.height = `${canvasHeight - 2}px`;
+        canvas.style.height = `${canvasHeight}px`;
       },
       [canvasWidth, canvasHeight]
     );
@@ -329,16 +322,14 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
 
     if (!canvasWidth) return null;
     return (
-      <Container>
-        <Canvas
-          ref={canvasRef}
-          onMouseDown={drawStart}
-          onContextMenu={(e) => e.preventDefault()}
-          onMouseMove={draw}
-          onMouseUp={drawEnd}
-          onMouseLeave={drawEnd}
-        />
-      </Container>
+      <Canvas
+        ref={canvasRef}
+        onMouseDown={drawStart}
+        onContextMenu={(e) => e.preventDefault()}
+        onMouseMove={draw}
+        onMouseUp={drawEnd}
+        onMouseLeave={drawEnd}
+      />
     );
   }
 );
