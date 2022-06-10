@@ -8,8 +8,11 @@ export interface Room {
   turn?: { name: string; uuid: string; idx: number };
   quizIndices: number[];
   currentRound: number;
-  kickedUserUUIDList: string[];
   state: GameState;
+  lastUpdated: number;
+  socketIdSet: Set<string>;
+  uuidSet: Set<string>;
+  kickedUserUUIDSet: Set<string>;
 }
 
 // 시작 전, 게임 시작, 라운드 넘어가는 사이 중간 상태, 게임 진행중인 상태, 점수 표

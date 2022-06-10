@@ -165,19 +165,6 @@ const GamePage = () => {
     }
   }, [socket, setGameState]);
 
-  // [이벤트 등록] 방장이 방을 나가는 경우 - 방 폭파
-  useEffect(() => {
-    if (socket) {
-      socket.on('onMasterLeftRoom', () => {
-        navigate('/', { replace: true });
-      });
-
-      return () => {
-        socket.off('onMasterLeftRoom');
-      };
-    }
-  }, [socket, navigate]);
-
   if (isLoading) return null;
 
   return (

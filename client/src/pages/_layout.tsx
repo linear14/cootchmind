@@ -59,8 +59,19 @@ const Layout = ({ children }: LayoutProps) => {
   useEffect(() => {
     socket.on(
       'onError',
-      ({ message, closeConnection }: { message: string; closeConnection: boolean | undefined }) => {
-        if (closeConnection) {
+      ({
+        message,
+        navigatePath,
+        wrongAccess
+      }: {
+        message: string;
+        navigatePath?: string;
+        wrongAccess?: boolean;
+      }) => {
+        if (navigatePath) {
+          navigate(navigatePath, { replace: true });
+        }
+        if (wrongAccess) {
           setError({
             message,
             callback: () => {
