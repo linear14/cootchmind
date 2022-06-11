@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { SocketContext } from 'context/socket';
@@ -34,19 +34,28 @@ const ChatRegion = () => {
   const { uuid, playerName } = useContext(UserContext);
   const [chatListItem, setChatListItems] = useState<Chat[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [chatAvailable, setChatAvailalbe] = useState<boolean>(true);
   const socket = useContext(SocketContext);
 
   // 채팅 보내기 (별도의 회원 정보 위조여부 검사하지 않습니다.)
-  const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
+  const sendMessage = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
 
-    const message = inputRef.current?.value;
+      const message = inputRef.current?.value;
 
-    if (playerName && uuid && message) {
-      socket.emit('chat', { playerName, message });
-      inputRef.current.value = '';
-    }
-  };
+      if (playerName && uuid && message && chatAvailable) {
+        socket.emit('chat', { playerName, message });
+        inputRef.current.value = '';
+        setChatAvailalbe(false);
+
+        setTimeout(() => {
+          setChatAvailalbe(true);
+        }, 500);
+      }
+    },
+    [socket, playerName, uuid, chatAvailable]
+  );
 
   useEffect(() => {
     socket.on('onChat', (chat: Chat) => {
