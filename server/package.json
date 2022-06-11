@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@types/node-cron": "^3.0.1",
-    "@types/uuid": "^8.3.4"
+    "@types/uuid": "^8.3.4",
+    "prettier": "^2.6.2"
   }
 }
