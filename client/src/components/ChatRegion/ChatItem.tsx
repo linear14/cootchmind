@@ -4,7 +4,7 @@ import { Chat } from 'types/chat';
 
 const Container = styled.div`
   width: 100%;
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   line-height: 1.2;
 
   span {

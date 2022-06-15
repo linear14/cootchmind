@@ -26,16 +26,17 @@ const Container = styled.div`
 `;
 
 const MoveToBottom = styled.div`
+  width: 50%;
   position: sticky;
-  width: 140px;
-  height: 36px;
-  line-height: 36px;
-  bottom: 0px;
+  padding: 0.5rem 0;
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 16px;
   text-align: center;
   border: 1px solid black;
+  background-color: white;
+  cursor: pointer;
 
   &::after {
     content: '최근 채팅 보기';
@@ -52,7 +53,7 @@ const ChatList = ({ items }: ChatListProps) => {
   const targetRef = useRef<HTMLDivElement>(null);
 
   const moveToBottom = useCallback(() => {
-    targetRef.current?.scrollIntoView();
+    targetRef.current?.scrollIntoView({ block: 'end' });
   }, []);
 
   useEffect(() => {
@@ -81,13 +82,15 @@ const ChatList = ({ items }: ChatListProps) => {
   }, []);
 
   return (
-    <Container ref={rootRef}>
-      {items.map((item, idx) => (
-        <ChatItem key={idx} item={item} />
-      ))}
-      <div ref={targetRef}></div>
-      {!autoScroll && <MoveToBottom onClick={() => setAutoScroll(true)} />}
-    </Container>
+    <>
+      <Container ref={rootRef}>
+        {items.map((item, idx) => (
+          <ChatItem key={idx} item={item} />
+        ))}
+        <div style={{ height: 1 }} ref={targetRef}></div>
+        {!autoScroll && <MoveToBottom onClick={() => setAutoScroll(true)} />}
+      </Container>
+    </>
   );
 };
 

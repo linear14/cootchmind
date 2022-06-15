@@ -62,7 +62,7 @@ const ChatRegion = () => {
         } else {
           const currentChatTime = Date.now();
           const oldestChatTime = userChatTime[0];
-          if (currentChatTime - oldestChatTime <= 4000) {
+          if (currentChatTime - oldestChatTime <= 3500) {
             setUserChatTime([]);
             setChatBlocking(true);
             setTimeout(() => {
