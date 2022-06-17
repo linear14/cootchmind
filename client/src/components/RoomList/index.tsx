@@ -5,7 +5,6 @@ import React, { useCallback, useContext, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { RoomListItem } from 'types/room';
-import NavButtons from './NavButtons';
 import RoomItem from './RoomItem';
 
 const Container = styled.div`

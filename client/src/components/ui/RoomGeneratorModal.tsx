@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 import ModalPortal from 'wrapper/ModalPortal';
@@ -32,6 +32,7 @@ const Content = styled.div`
     text-align: center;
     font-size: 1.5rem;
     line-height: 1.5rem;
+    font-weight: bold;
   }
 `;
 
@@ -40,41 +41,31 @@ const Form = styled.form`
   flex-direction: column;
   gap: 0.5rem;
 
+  p {
+    font-size: 14px;
+  }
+
   input {
     height: 2rem;
     line-height: 2rem;
   }
 `;
 
-const Buttons = styled.div`
+const ButtonsContainer = styled.div`
   display: flex;
   gap: 1rem;
 `;
 
-const GenerateRoomButton = styled.button`
+const Button = styled.button`
   flex: 1;
   height: 36px;
-  line-height: 36px;
   text-align: center;
   border: 1px solid black;
   cursor: pointer;
 
-  &::after {
-    content: '방 만들기';
-  }
-`;
-
-const CloseButton = styled.button`
-  flex: 1;
-  height: 36px;
-  line-height: 36px;
-  text-align: center;
-  border: 1px solid black;
-  cursor: pointer;
-
-  &::after {
-    content: '닫기';
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 interface RoomGeneratorProps {
@@ -89,8 +80,14 @@ const RoomGeneratorModal = ({ onGenerate, onClose }: RoomGeneratorProps) => {
     e.preventDefault();
 
     const title = inputRef.current?.value;
-    onGenerate(title);
+    if (title && title.trim()) {
+      onGenerate(title.trim());
+    }
   };
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   return (
     <ModalPortal>
@@ -101,10 +98,14 @@ const RoomGeneratorModal = ({ onGenerate, onClose }: RoomGeneratorProps) => {
             <p>방 제목</p>
             <input ref={inputRef} placeholder='방 제목을 입력해주세요' />
           </Form>
-          <Buttons>
-            <GenerateRoomButton onClick={generateRoom} />
-            <CloseButton onClick={onClose} />
-          </Buttons>
+          <ButtonsContainer>
+            <Button type='button' onClick={generateRoom}>
+              방 만들기
+            </Button>
+            <Button type='button' onClick={onClose}>
+              닫기
+            </Button>
+          </ButtonsContainer>
         </Content>
       </Container>
     </ModalPortal>

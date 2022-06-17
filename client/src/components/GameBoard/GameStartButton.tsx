@@ -6,23 +6,21 @@ import { UserContext } from 'context/user';
 import { useCallback, useContext } from 'react';
 import styled from 'styled-components';
 
-const Container = styled.div`
+const Container = styled.button`
   position: absolute;
   width: 240px;
-  height: 48px;
-  line-height: 48px;
+  padding: 0.75rem 0;
   top: 30%;
   left: 50%;
   transform: translateX(-50%);
   background: white;
+  font-size: 16px;
 
-  text-align: center;
   border: 1px solid black;
-  cursor: pointer;
 
-  &::after {
-    content: '게임 시작하기';
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const GameStartButton = () => {
@@ -48,7 +46,11 @@ const GameStartButton = () => {
   }, [uuid, roomId, master, state, playerList]);
 
   if (!isGameAvailable()) return null;
-  return <Container onClick={startGame} />;
+  return (
+    <Container type='button' onClick={startGame}>
+      게임 시작하기
+    </Container>
+  );
 };
 
 export default GameStartButton;

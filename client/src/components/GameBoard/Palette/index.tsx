@@ -15,17 +15,16 @@ const Container = styled.div`
   gap: 1rem;
 `;
 
-const EraseAllButton = styled.div`
+const EraseAllButton = styled.button`
   width: 120px;
   height: 36px;
   border: 1px solid black;
-  font-size: 18px;
+  font-size: 14px;
   line-height: 36px;
-  text-align: center;
 
-  &::after {
-    content: '전체 지우기';
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 interface PaletteProps {
@@ -63,7 +62,9 @@ const Palette = ({ canvasRef }: PaletteProps) => {
   return (
     <Container>
       <ColorList onClickItem={setColor} />
-      <EraseAllButton onClick={eraseAll} />
+      <EraseAllButton type='button' onClick={eraseAll}>
+        전체 지우기
+      </EraseAllButton>
     </Container>
   );
 };

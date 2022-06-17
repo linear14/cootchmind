@@ -17,13 +17,12 @@ const Input = styled.input`
   line-height: 36px;
 `;
 
-const StartButton = styled.button`
+const Button = styled.button`
   height: 32px;
   font-size: 16px;
-
-  &::after {
-    content: '시작하기';
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const PlayerNameInput = () => {
@@ -49,7 +48,9 @@ const PlayerNameInput = () => {
         placeholder='게임에서 사용할 닉네임을 입력해주세요'
         ref={playerNameInputRef}
       />
-      <StartButton onClick={savePlayerName} />
+      <Button type='button' onClick={savePlayerName}>
+        시작하기
+      </Button>
     </Container>
   );
 };

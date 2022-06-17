@@ -44,14 +44,11 @@ const Buttons = styled.div`
 const ConfirmButton = styled.button`
   flex: 1;
   height: 36px;
-  line-height: 36px;
-  text-align: center;
   border: 1px solid black;
-  cursor: pointer;
 
-  &::after {
-    content: '확인';
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 interface ErrorModalProps {
@@ -67,7 +64,9 @@ const ErrorModal = ({ message, onClose }: ErrorModalProps) => {
           <h2>알림</h2>
           <p>{message}</p>
           <Buttons>
-            <ConfirmButton onClick={onClose} />
+            <ConfirmButton type='button' onClick={onClose}>
+              확인
+            </ConfirmButton>
           </Buttons>
         </Content>
       </Container>

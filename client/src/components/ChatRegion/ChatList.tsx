@@ -25,7 +25,7 @@ const Container = styled.div`
   }
 `;
 
-const MoveToBottom = styled.div`
+const MoveToBottom = styled.button`
   width: 50%;
   position: sticky;
   padding: 0.5rem 0;
@@ -36,11 +36,10 @@ const MoveToBottom = styled.div`
   text-align: center;
   border: 1px solid black;
   background-color: white;
-  cursor: pointer;
 
-  &::after {
-    content: '최근 채팅 보기';
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 interface ChatListProps {
@@ -88,7 +87,11 @@ const ChatList = ({ items }: ChatListProps) => {
           <ChatItem key={idx} item={item} />
         ))}
         <div style={{ height: 1 }} ref={targetRef}></div>
-        {!autoScroll && <MoveToBottom onClick={() => setAutoScroll(true)} />}
+        {!autoScroll && (
+          <MoveToBottom type='button' onClick={() => setAutoScroll(true)}>
+            최근 채팅 보기
+          </MoveToBottom>
+        )}
       </Container>
     </>
   );
