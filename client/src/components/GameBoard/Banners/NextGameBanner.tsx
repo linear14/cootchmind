@@ -23,14 +23,19 @@ const Round = styled.div`
 const Player = styled.div`
   margin-top: 24px;
   font-size: 22px;
+  font-weight: bold;
 
   &::before {
-    content: "이번 그림은 '";
+    font-size: 18px;
+    font-weight: normal;
+    content: '이번 그림은 ';
     white-space: pre;
   }
 
   &::after {
-    content: "'님이 그립니다!";
+    font-size: 18px;
+    font-weight: normal;
+    content: '님이 그립니다!';
     white-space: pre;
   }
 `;

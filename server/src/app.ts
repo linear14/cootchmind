@@ -15,7 +15,7 @@ const io = new Server(server, {
   }
 });
 
-const ROUND_NUM = 3;
+const ROUND_NUM = 1;
 const CHAT_CHANNEL = 'chat_channel';
 const rooms = new Map<string, Room>();
 const socketToUUID = new Map<string, string | undefined>(); // socketId - uuid, undefined

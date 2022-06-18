@@ -11,35 +11,48 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 12px;
-  font-size: 36px;
-  font-weight: bold;
+  gap: 24px;
+
   background-color: white;
   z-index: 5;
 `;
 
-const Title = styled.div``;
-
-const Answer = styled.div`
+const AnswerContainer = styled.div`
   display: flex;
   flex-direction: column;
   padding: 1rem;
-  border: 1px solid black;
   align-items: center;
   gap: 8px;
+`;
 
+const AnswerHeader = styled.div`
+  font-size: 14px;
   span {
-    font-size: 14px;
-  }
-
-  div {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
   }
 `;
 
+const Answer = styled.div`
+  font-size: 20px;
+  font-weight: bold;
+  white-space: pre-wrap;
+  border: 2px solid #aaaaaa;
+  padding: 0.5rem 1rem;
+`;
+
+const WinPlayerContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+`;
+
 const WinPlayer = styled.div`
   span {
+    font-size: 18px;
     font-weight: bold;
   }
 `;
@@ -55,20 +68,24 @@ const RoundResultBanner = ({ result }: Props) => {
 
   return (
     <Container>
-      <Title>{`${result.round}라운드 종료!`}</Title>
-      <WinPlayer>
+      <AnswerContainer>
+        <AnswerHeader>
+          <span>Round {result.round}</span> 정답은...
+        </AnswerHeader>
+        <Answer>{result.answer}</Answer>
+      </AnswerContainer>
+      <WinPlayerContainer>
         {result.winPlayer ? (
           <>
-            <span>{result.winPlayer?.name}</span>님의 정답
+            <WinPlayer>
+              <span>{result.winPlayer?.name}</span>님이
+            </WinPlayer>
+            <div>정답을 맞추어 점수를 획득합니다!</div>
           </>
         ) : (
-          '제한시간 초과'
+          <div>제한시간동안 아무도 정답을 맞추지 못했어요!</div>
         )}
-      </WinPlayer>
-      <Answer>
-        <span>정답</span>
-        <div>{result.answer}</div>
-      </Answer>
+      </WinPlayerContainer>
     </Container>
   );
 };
