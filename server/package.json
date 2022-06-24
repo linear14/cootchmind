@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/app.js",
+    "start": "pm2 node dist/src/app.js --name 'server' -- start",
     "build:development": "cross-env NODE_ENV=development tsc -p .",
     "build:production": "cross-env NODE_ENV=production tsc -p .",
     "dev": "cross-env NODE_ENV=development nodemon --watch \"src/**/*.ts\" --exec \"ts-node\" src/app.ts"
