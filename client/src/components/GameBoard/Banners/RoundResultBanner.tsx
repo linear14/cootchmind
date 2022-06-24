@@ -66,6 +66,10 @@ const RoundResultBanner = ({ result }: Props) => {
     return <Container>??</Container>;
   }
 
+  if (result.error) {
+    return <Container>{result.error}</Container>;
+  }
+
   return (
     <Container>
       <AnswerContainer>

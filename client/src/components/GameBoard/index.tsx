@@ -65,11 +65,19 @@ const GameBoard = ({ answer }: GameBoardProps) => {
   // prev game state가 undefined이면 어떻게하지?
   useEffect(() => {
     if (socket) {
-      socket.on('onRoundEnded', ({ answer, winPlayer, state, currentRound, turn, players }) => {
-        setGameState({ state, currentRound, turn });
-        setPlayerList(players);
-        setRoundResult({ round: currentRound, winPlayer, answer });
-      });
+      socket.on(
+        'onRoundEnded',
+        ({ answer, winPlayer, state, currentRound, turn, players, error }) => {
+          if (error) {
+            setGameState({ state, currentRound, turn });
+            setRoundResult({ round: currentRound, error });
+          } else {
+            setGameState({ state, currentRound, turn });
+            setPlayerList(players);
+            setRoundResult({ round: currentRound, winPlayer, answer });
+          }
+        }
+      );
 
       return () => {
         socket.off('onRoundEnded');

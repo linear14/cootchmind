@@ -15,7 +15,7 @@ const io = new Server(server, {
   }
 });
 
-const ROUND_NUM = 1;
+const ROUND_NUM = 3;
 const CHAT_CHANNEL = 'chat_channel';
 const rooms = new Map<string, Room>();
 const socketToUUID = new Map<string, string | undefined>(); // socketId - uuid, undefined
@@ -174,6 +174,49 @@ const endGame = (room: Room) => {
   };
 
   io.to(room.roomId).emit('onGameEnded', { result, newGameState, players: room.players });
+};
+
+const updateGameStateIfNowPlaying = (uuid: string, roomId: string, room: Room) => {
+  // 게임 참여 인원이 1명이라면?
+  if (room.players.filter((player) => player !== null).length < 2) {
+    room.lastUpdated = Date.now();
+    room.state = 'interval';
+
+    io.to(roomId).emit('onRoundEnded', {
+      state: room.state,
+      currentRound: room.currentRound,
+      turn: room.turn,
+      error: '게임에 참여하는 인원이 2명 미만이기 때문에 게임을 종료합니다.'
+    });
+    setTimeout(() => {
+      const room = rooms.get(roomId);
+      if (room) {
+        endGame(room);
+      }
+    }, 3000);
+  }
+  // 그림 그리고 있던 사람이 나가는 경우?
+  else if ((room.state === 'readyRound' || room.state === 'play') && room.turn?.uuid === uuid) {
+    room.lastUpdated = Date.now();
+    room.state = 'interval';
+
+    io.to(roomId).emit('onRoundEnded', {
+      state: room.state,
+      currentRound: room.currentRound,
+      turn: room.turn,
+      error: '그림을 그려야하는 유저가 게임을 나갔습니다. 다음 라운드를 준비합니다.'
+    });
+    setTimeout(() => {
+      const room = rooms.get(roomId);
+      if (room) {
+        if (room.currentRound === ROUND_NUM) {
+          endGame(room);
+        } else {
+          startRound(room);
+        }
+      }
+    }, 3000);
+  }
 };
 
 io.on('connection', (socket) => {
@@ -356,6 +399,7 @@ io.on('connection', (socket) => {
           room.players[playerIdx] = null;
         }
         io.to(roomId).emit('onPlayerRefreshed', room.players);
+        updateGameStateIfNowPlaying(uuid, roomId, room);
       }
     }
   });
@@ -563,13 +607,14 @@ io.on('connection', (socket) => {
 
       // 방장인 경우
       if (room) {
+        const roomId = room.roomId;
         if (room.master.uuid === uuid) {
-          rooms.delete(room.roomId);
-          io.to(room.roomId).except(socket.id).emit('onError', {
+          rooms.delete(roomId);
+          io.to(roomId).except(socket.id).emit('onError', {
             message: '방장이 방을 나가 방이 제거되었습니다.',
             navigatePath: '/'
           });
-          io.socketsLeave(room.roomId);
+          io.socketsLeave(roomId);
         }
         // 방장이 아닌경우
         else {
@@ -579,7 +624,8 @@ io.on('connection', (socket) => {
           if (playerIdx >= 0) {
             room.players[playerIdx] = null;
           }
-          io.to(room.roomId).emit('onPlayerRefreshed', room.players);
+          io.to(roomId).emit('onPlayerRefreshed', room.players);
+          updateGameStateIfNowPlaying(uuid, roomId, room);
         }
       }
     }
