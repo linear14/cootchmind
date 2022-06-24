@@ -1,7 +1,9 @@
 import React, { createContext } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const socket = io('http://localhost:4000');
+console.log(process.env.REACT_APP_SERVER_ORIGIN);
+const socket = io(process.env.REACT_APP_SERVER_ORIGIN || 'http://localhost:4000');
+// const socket = io('http://localhost:4000');
 
 export const SocketContext = createContext<Socket>(socket);
 

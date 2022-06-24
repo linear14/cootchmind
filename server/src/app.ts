@@ -6,12 +6,19 @@ import { Room } from 'types/room';
 import { quizItemList } from './data/quiz';
 import { getQuizIndices } from './helpers/gameUtil';
 import cron from 'node-cron';
+import dotenv from 'dotenv';
+
+if (process.env.NODE_ENV === 'production') {
+  dotenv.config({ path: '.env.production' });
+} else {
+  dotenv.config({ path: '.env.development' });
+}
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000'
+    origin: process.env.CLIENT_ORIGIN
   }
 });
 
