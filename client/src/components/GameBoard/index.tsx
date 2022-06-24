@@ -121,7 +121,7 @@ const GameBoard = ({ answer }: GameBoardProps) => {
         {state && state === 'end' && <GameResultBanner result={gameResult} />}
       </Left>
       <Right>
-        <Timer playTime={30} />
+        <Timer playTime={150} />
         <CurrentWord answer={state && state === 'play' ? answer : ''} />
         <Palette canvasRef={canvasRef} />
       </Right>
