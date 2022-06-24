@@ -117,7 +117,7 @@ const startRound = (room: Room) => {
 
       setTimeout(() => {
         const rooom = rooms.get(room.roomId);
-        if (rooom) {
+        if (rooom && rooom.state !== 'intervalWithUserExit') {
           rooom.state = 'play';
           io.to(rooom.roomId).emit('onRoundStarted', {
             state: 'play',
@@ -180,10 +180,10 @@ const updateGameStateIfNowPlaying = (uuid: string, roomId: string, room: Room) =
   // 게임 참여 인원이 1명이라면?
   if (room.players.filter((player) => player !== null).length < 2) {
     room.lastUpdated = Date.now();
-    room.state = 'interval';
+    room.state = 'intervalWithUserExit';
 
     io.to(roomId).emit('onRoundEnded', {
-      state: room.state,
+      state: 'interval',
       currentRound: room.currentRound,
       turn: room.turn,
       error: '게임에 참여하는 인원이 2명 미만이기 때문에 게임을 종료합니다.'
@@ -198,10 +198,10 @@ const updateGameStateIfNowPlaying = (uuid: string, roomId: string, room: Room) =
   // 그림 그리고 있던 사람이 나가는 경우?
   else if ((room.state === 'readyRound' || room.state === 'play') && room.turn?.uuid === uuid) {
     room.lastUpdated = Date.now();
-    room.state = 'interval';
+    room.state = 'intervalWithUserExit';
 
     io.to(roomId).emit('onRoundEnded', {
-      state: room.state,
+      state: 'interval',
       currentRound: room.currentRound,
       turn: room.turn,
       error: '그림을 그려야하는 유저가 게임을 나갔습니다. 다음 라운드를 준비합니다.'
@@ -429,11 +429,9 @@ io.on('connection', (socket) => {
 
     setTimeout(() => {
       const room = rooms.get(roomId);
-      if (!room) {
-        socket.emit('onError', { message: '존재하지 않는 방입니다.' });
-        return;
+      if (room && room.state !== 'intervalWithUserExit') {
+        startRound(room);
       }
-      startRound(room);
     }, 3000);
   });
 
@@ -469,22 +467,20 @@ io.on('connection', (socket) => {
 
         setTimeout(() => {
           const room = rooms.get(roomId);
-          if (!room) {
-            socket.emit('onError', { message: '존재하지 않는 방입니다.' });
-            return;
-          }
-          room.lastUpdated = Date.now();
-          if (room.currentRound === ROUND_NUM) {
-            endGame(room);
-          } else {
-            startRound(room);
+          if (room && room.state !== 'intervalWithUserExit') {
+            room.lastUpdated = Date.now();
+            if (room.currentRound === ROUND_NUM) {
+              endGame(room);
+            } else {
+              startRound(room);
+            }
           }
         }, 3000);
       }
     }
   });
 
-  // xx. 라운드 강제 종료 (타이머 종료, 진행중 유저 나가기 등)
+  // 타이머 시간 초과 - 라운드 강제 종료
   socket.on('forceStopRound', ({ uuid, roomId }) => {
     const room = rooms.get(roomId);
     if (!room) {
@@ -510,15 +506,13 @@ io.on('connection', (socket) => {
 
       setTimeout(() => {
         const room = rooms.get(roomId);
-        if (!room) {
-          socket.emit('onError', { message: '존재하지 않는 방입니다.' });
-          return;
-        }
-        room.lastUpdated = Date.now();
-        if (room.currentRound === ROUND_NUM) {
-          endGame(room);
-        } else {
-          startRound(room);
+        if (room && room.state !== 'intervalWithUserExit') {
+          room.lastUpdated = Date.now();
+          if (room.currentRound === ROUND_NUM) {
+            endGame(room);
+          } else {
+            startRound(room);
+          }
         }
       }, 3000);
     }
