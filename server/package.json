@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start:production": "export NODE_ENV=production && pm2 start --name 'server' -- start",
+    "start:production": "export NODE_ENV=production && pm2 start --name 'server' npm -- start",
     "start": "node dist/src/app.js",
     "build:development": "cross-env NODE_ENV=development tsc -p .",
     "build:production": "cross-env NODE_ENV=production tsc -p .",
