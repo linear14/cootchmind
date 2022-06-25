@@ -44,7 +44,7 @@ const Button = styled.button.attrs({
 
 const Notice = styled.div`
   font-size: 14px;
-  line-height: 16px;
+  line-height: 1.25;
 `;
 
 interface RoomListProps {

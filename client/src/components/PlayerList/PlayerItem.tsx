@@ -8,9 +8,9 @@ const Container = styled.div<{ highlight: boolean }>`
   position: relative;
   width: 100%;
   height: 80px;
-  padding: 1rem;
+  padding: 0.5rem;
 
-  border: ${({ highlight }) => (highlight ? '2px solid red' : '1px solid black')};
+  border: ${({ highlight }) => (highlight ? '2px solid red' : '2px solid #cccccc')};
   background-color: white;
 
   display: flex;
@@ -19,11 +19,15 @@ const Container = styled.div<{ highlight: boolean }>`
 `;
 
 const PlayerName = styled.div`
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
+  line-height: 1.15;
+  color: #303030;
 `;
 
-const AnswerCount = styled.div``;
+const AnswerCount = styled.div`
+  font-size: 14px;
+`;
 
 const Message = styled.span`
   position: absolute;

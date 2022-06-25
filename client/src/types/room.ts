@@ -17,6 +17,8 @@ export interface RoomListItem {
   masterName: string;
   currentRound: number;
   state: GameState;
+  level: number;
+  userCount: number;
   kickedUserUUIDList: string[];
 }
 

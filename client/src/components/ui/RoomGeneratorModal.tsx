@@ -134,7 +134,7 @@ const RoomGeneratorModal = ({ onGenerate, onClose }: RoomGeneratorProps) => {
           <h2>방 만들기</h2>
           <Form onSubmit={generateRoom}>
             <p>방 제목</p>
-            <input ref={inputRef} placeholder='방 제목을 입력해주세요' />
+            <input type='text' ref={inputRef} placeholder='방 제목을 입력해주세요' maxLength={20} />
             <LevelWrap>
               <Level active={level === 1} onClick={() => setLevel(1)}>
                 쉬움

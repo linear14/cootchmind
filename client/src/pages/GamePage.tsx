@@ -39,7 +39,7 @@ const Bottom = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 1rem;
+  gap: 0.5rem;
 `;
 
 const GamePage = () => {

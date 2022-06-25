@@ -305,7 +305,9 @@ io.on('connection', (socket) => {
       title: room.title,
       masterName: room.master.name,
       currentRound: room.currentRound,
+      level: room.level,
       state: room.state,
+      userCount: room.players.filter((item) => item !== null).length,
       kickedUserUUIDSet: room.kickedUserUUIDSet
     }));
     socket.emit('onRoomListRefreshed', parsedRoom);
