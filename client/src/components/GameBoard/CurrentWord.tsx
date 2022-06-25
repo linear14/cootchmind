@@ -2,12 +2,13 @@ import styled from 'styled-components';
 
 const Container = styled.div<{ hidden?: boolean }>`
   width: 100%;
-  height: 60px;
-  line-height: 24px;
+  height: 80px;
+  line-height: 28px;
   border: 1px solid black;
   background-color: white;
+  padding: 0.5rem;
 
-  font-size: 24px;
+  font-size: 22px;
   font-weight: bold;
 
   display: flex;
