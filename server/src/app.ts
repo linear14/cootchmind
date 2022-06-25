@@ -250,7 +250,7 @@ io.on('connection', (socket) => {
   });
 
   // 4. 방 생성 - 완료
-  socket.on('createRoom', ({ uuid, playerName, title }) => {
+  socket.on('createRoom', ({ uuid, playerName, title, level }) => {
     if (uuidToRoomId.get(uuid)) {
       socket.emit('onError', { message: '이미 접속중인 방이 존재합니다.' });
       return;
@@ -272,6 +272,7 @@ io.on('connection', (socket) => {
       quizIndices: [],
       currentRound: 0,
       state: 'ready',
+      level,
       lastUpdated: Date.now(),
       kickedUserUUIDSet: new Set<string>(),
       socketIdSet: new Set<string>(),
@@ -421,7 +422,7 @@ io.on('connection', (socket) => {
     }
     room.lastUpdated = Date.now();
     room.state = 'start';
-    room.quizIndices = getQuizIndices(quizItemList.length);
+    room.quizIndices = getQuizIndices(room.level);
     for (let i = 0; i < 6; i++) {
       const player = room.players[i];
       if (player) {

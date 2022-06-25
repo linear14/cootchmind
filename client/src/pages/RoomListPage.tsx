@@ -98,9 +98,9 @@ const RoomListPage = () => {
   const { check, initializeUser } = useCheckValidUser();
 
   const createRoom = useCallback(
-    (title?: string) => {
-      if (check() && socket && title && uuid && playerName) {
-        socket.emit('createRoom', { uuid, playerName, title });
+    (title: string, level: number) => {
+      if (check() && socket && uuid && playerName) {
+        socket.emit('createRoom', { uuid, playerName, title, level });
       }
     },
     [socket, check, uuid, playerName]
