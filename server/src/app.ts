@@ -184,45 +184,53 @@ const endGame = (room: Room) => {
 };
 
 const updateGameStateIfNowPlaying = (uuid: string, roomId: string, room: Room) => {
-  // 게임 참여 인원이 1명이라면?
-  if (room.players.filter((player) => player !== null).length < 2) {
-    room.lastUpdated = Date.now();
-    room.state = 'intervalWithUserExit';
+  if (
+    room.state === 'readyRound' ||
+    room.state === 'interval' ||
+    room.state === 'play' ||
+    room.state === 'start' ||
+    room.state === 'intervalWithUserExit'
+  ) {
+    // 게임 참여 인원이 1명이라면?
+    if (room.players.filter((player) => player !== null).length < 2) {
+      room.lastUpdated = Date.now();
+      room.state = 'intervalWithUserExit';
 
-    io.to(roomId).emit('onRoundEnded', {
-      state: 'interval',
-      currentRound: room.currentRound,
-      turn: room.turn,
-      error: '게임에 참여하는 인원이 2명 미만이기 때문에 게임을 종료합니다.'
-    });
-    setTimeout(() => {
-      const room = rooms.get(roomId);
-      if (room) {
-        endGame(room);
-      }
-    }, 3000);
-  }
-  // 그림 그리고 있던 사람이 나가는 경우?
-  else if ((room.state === 'readyRound' || room.state === 'play') && room.turn?.uuid === uuid) {
-    room.lastUpdated = Date.now();
-    room.state = 'intervalWithUserExit';
-
-    io.to(roomId).emit('onRoundEnded', {
-      state: 'interval',
-      currentRound: room.currentRound,
-      turn: room.turn,
-      error: '그림을 그려야하는 유저가 게임을 나갔습니다. 다음 라운드를 준비합니다.'
-    });
-    setTimeout(() => {
-      const room = rooms.get(roomId);
-      if (room) {
-        if (room.currentRound === ROUND_NUM) {
+      io.to(roomId).emit('onRoundEnded', {
+        state: 'interval',
+        currentRound: room.currentRound,
+        turn: room.turn,
+        error: '게임에 참여하는 인원이 2명 미만이기 때문에 게임을 종료합니다.'
+      });
+      setTimeout(() => {
+        const room = rooms.get(roomId);
+        if (room) {
           endGame(room);
-        } else {
-          startRound(room);
         }
-      }
-    }, 3000);
+      }, 3000);
+    }
+    // 그림 그리고 있던 사람이 나가는 경우?
+    else if ((room.state === 'readyRound' || room.state === 'play') && room.turn?.uuid === uuid) {
+      room.lastUpdated = Date.now();
+      room.state = 'intervalWithUserExit';
+
+      io.to(roomId).emit('onRoundEnded', {
+        state: 'interval',
+        currentRound: room.currentRound,
+        turn: room.turn,
+        error: '그림을 그려야하는 유저가 게임을 나갔습니다. 다음 라운드를 준비합니다.'
+      });
+      setTimeout(() => {
+        const room = rooms.get(roomId);
+        if (room) {
+          if (room.currentRound === ROUND_NUM) {
+            endGame(room);
+          } else {
+            startRound(room);
+          }
+        }
+      }, 3000);
+    }
   }
 };
 
