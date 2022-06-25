@@ -124,8 +124,9 @@ const startRound = (room: Room) => {
 
       setTimeout(() => {
         const rooom = rooms.get(room.roomId);
-        if (rooom && rooom.state !== 'intervalWithUserExit') {
+        if (rooom && rooom.state === 'readyRound' && rooom.intervalReason !== 'needPlayer') {
           rooom.state = 'play';
+          rooom.intervalReason = undefined;
           io.to(rooom.roomId).emit('onRoundStarted', {
             state: 'play',
             currentRound: rooom.currentRound,
@@ -164,6 +165,7 @@ const endGame = (room: Room) => {
   );
 
   room.state = 'ready';
+  room.intervalReason = undefined;
   for (let i = 0; i < 6; i++) {
     const player = room.players[i];
     if (player !== null) {
@@ -188,13 +190,13 @@ const updateGameStateIfNowPlaying = (uuid: string, roomId: string, room: Room) =
     room.state === 'readyRound' ||
     room.state === 'interval' ||
     room.state === 'play' ||
-    room.state === 'start' ||
-    room.state === 'intervalWithUserExit'
+    room.state === 'start'
   ) {
     // 게임 참여 인원이 1명이라면?
     if (room.players.filter((player) => player !== null).length < 2) {
       room.lastUpdated = Date.now();
-      room.state = 'intervalWithUserExit';
+      room.state = 'interval';
+      room.intervalReason = 'needPlayer';
 
       io.to(roomId).emit('onRoundEnded', {
         state: 'interval',
@@ -204,7 +206,7 @@ const updateGameStateIfNowPlaying = (uuid: string, roomId: string, room: Room) =
       });
       setTimeout(() => {
         const room = rooms.get(roomId);
-        if (room) {
+        if (room && room.state === 'interval' && room.intervalReason === 'needPlayer') {
           endGame(room);
         }
       }, 3000);
@@ -212,7 +214,8 @@ const updateGameStateIfNowPlaying = (uuid: string, roomId: string, room: Room) =
     // 그림 그리고 있던 사람이 나가는 경우?
     else if ((room.state === 'readyRound' || room.state === 'play') && room.turn?.uuid === uuid) {
       room.lastUpdated = Date.now();
-      room.state = 'intervalWithUserExit';
+      room.state = 'interval';
+      room.intervalReason = 'noPainter';
 
       io.to(roomId).emit('onRoundEnded', {
         state: 'interval',
@@ -222,7 +225,7 @@ const updateGameStateIfNowPlaying = (uuid: string, roomId: string, room: Room) =
       });
       setTimeout(() => {
         const room = rooms.get(roomId);
-        if (room) {
+        if (room && room.state === 'interval' && room.intervalReason === 'noPainter') {
           if (room.currentRound === ROUND_NUM) {
             endGame(room);
           } else {
@@ -447,7 +450,7 @@ io.on('connection', (socket) => {
 
     setTimeout(() => {
       const room = rooms.get(roomId);
-      if (room && room.state !== 'intervalWithUserExit') {
+      if (room && room.state === 'start') {
         startRound(room);
       }
     }, 3000);
@@ -467,13 +470,17 @@ io.on('connection', (socket) => {
       const currentRound = room.currentRound;
       const question = quizItemList[room.quizIndices[currentRound - 1]];
 
-      if (question.answer.replace(/(\s*)/g, '') === message.replace(/(\s*)/g, '')) {
+      if (
+        question.answer.replace(/(\s*)/g, '').toLowerCase() ===
+        message.replace(/(\s*)/g, '').toLowerCase()
+      ) {
         const player = room.players.find((player) => player?.uuid === uuid);
         if (player && player !== null) {
           player.answerCnt++;
         }
         room.lastUpdated = Date.now();
         room.state = 'interval';
+        room.intervalReason = 'default';
         io.to(roomId).emit('onRoundEnded', {
           answer: question.answer,
           winPlayer: player,
@@ -485,7 +492,7 @@ io.on('connection', (socket) => {
 
         setTimeout(() => {
           const room = rooms.get(roomId);
-          if (room && room.state !== 'intervalWithUserExit') {
+          if (room && room.state === 'interval' && room.intervalReason === 'default') {
             room.lastUpdated = Date.now();
             if (room.currentRound === ROUND_NUM) {
               endGame(room);
@@ -513,6 +520,8 @@ io.on('connection', (socket) => {
 
       room.lastUpdated = Date.now();
       room.state = 'interval';
+      room.intervalReason = 'default';
+
       io.to(roomId).emit('onRoundEnded', {
         answer: question.answer,
         winPlayer: null,
@@ -524,7 +533,7 @@ io.on('connection', (socket) => {
 
       setTimeout(() => {
         const room = rooms.get(roomId);
-        if (room && room.state !== 'intervalWithUserExit') {
+        if (room && room.state === 'interval' && room.intervalReason === 'default') {
           room.lastUpdated = Date.now();
           if (room.currentRound === ROUND_NUM) {
             endGame(room);
