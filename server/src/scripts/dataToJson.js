@@ -16,49 +16,49 @@ function toJson() {
       type: 1,
       id: 1001 + idx,
       answer: data,
-      level: 'easy'
+      level: 1
     })),
     ...pets.map((data, idx) => ({
       type: 2,
       id: 2001 + idx,
       answer: data,
-      level: 'normal'
+      level: 2
     })),
     ...treasures.map((data, idx) => ({
       type: 3,
       id: 3001 + idx,
       answer: data,
-      level: 'normal'
+      level: 2
     })),
     ...skins.map((data, idx) => ({
       type: 4,
       id: 4001 + idx,
       answer: data,
-      level: 'hard'
+      level: 3
     })),
     ...maps.map((data, idx) => ({
       type: 5,
       id: 5001 + idx,
       answer: data,
-      level: 'hard'
+      level: 3
     })),
     ...items.map((data, idx) => ({
       type: 6,
       id: 6001 + idx,
       answer: data,
-      level: 'easy'
+      level: 1
     })),
     ...contents.map((data, idx) => ({
       type: 7,
       id: 7001 + idx,
       answer: data,
-      level: 'easy'
+      level: 1
     })),
     ...etc.map((data, idx) => ({
       type: 9,
       id: 9001 + idx,
       answer: data,
-      level: 'normal'
+      level: 1
     }))
   ];
 
@@ -71,13 +71,11 @@ function toFormatted(code) {
 
 (async () => {
   const rawQuizFile = `
-  type Level = 'easy' | 'normal' | 'hard';
-
   interface QuizItem {
     type: number;
     id: number;
     answer: string;
-    level: Level;
+    level: number;
   }
 
   export const quizItemList: QuizItem[] = ${toJson()};

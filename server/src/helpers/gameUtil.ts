@@ -1,8 +1,17 @@
-export const getQuizIndices = (totalLength: number) => {
+import { quizItemList } from '../data/quiz';
+
+export const getQuizIndices = (level: number) => {
   const result: number[] = [];
 
-  while (result.length < 10) {
-    const randomIndex = Math.floor(Math.random() * totalLength);
+  const candidateIndices = quizItemList.reduce<number[]>((pre, cur, idx) => {
+    if (cur.level <= level) {
+      pre.push(idx);
+    }
+    return pre;
+  }, []);
+
+  while (result.length < 12) {
+    const randomIndex = candidateIndices[Math.floor(Math.random() * candidateIndices.length)];
     if (!result.includes(randomIndex)) {
       result.push(randomIndex);
     }

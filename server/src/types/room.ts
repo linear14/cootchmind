@@ -9,6 +9,7 @@ export interface Room {
   quizIndices: number[];
   currentRound: number;
   state: GameState;
+  level: number;
   lastUpdated: number;
   socketIdSet: Set<string>;
   uuidSet: Set<string>;
