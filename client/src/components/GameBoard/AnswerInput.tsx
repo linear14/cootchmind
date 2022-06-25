@@ -52,7 +52,12 @@ const AnswerInput = () => {
 
   return (
     <Form onSubmit={sendMessage}>
-      <input ref={inputRef} placeholder='정답 입력(띄어쓰기 안하셔도 정답으로 인정됩니다!)' />
+      <input
+        type='text'
+        ref={inputRef}
+        placeholder='정답 입력(띄어쓰기 안하셔도 정답으로 인정됩니다!)'
+        maxLength={40}
+      />
     </Form>
   );
 };

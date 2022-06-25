@@ -99,9 +99,11 @@ const ChatRegion = () => {
       <ChatList items={chatListItem} />
       <ChatForm onSubmit={sendMessage}>
         <ChatInput
+          type='text'
           ref={inputRef}
           placeholder={chatBlocking ? '채팅이 너무 빨라요ㅜㅜ 10초만 쉬고 오세요' : '채팅창'}
           disabled={chatBlocking}
+          maxLength={50}
         />
       </ChatForm>
     </Container>

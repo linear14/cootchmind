@@ -21,17 +21,6 @@ const InnerContainer = styled.div<{ initialHeight: number }>`
   background-color: white;
 `;
 
-const Notice = styled.span`
-  position: absolute;
-  top: -28px;
-  left: 50%;
-  transform: translateX(-50%);
-
-  font-size: 14px;
-  line-height: 14px;
-  color: #aaaaaa;
-`;
-
 interface SocketError {
   message: string;
   callback: () => void;
@@ -94,7 +83,6 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <InnerContainer initialHeight={initialContainerHeight}>
       {children}
-      <Notice>최상의 게임 환경을 위해 브라우저 크기를 최대로 늘리고 새로고침을 눌러주세요.</Notice>
       {error && <ErrorModal message={error.message} onClose={error.callback} />}
     </InnerContainer>
   );

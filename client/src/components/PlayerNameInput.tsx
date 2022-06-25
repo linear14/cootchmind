@@ -31,8 +31,8 @@ const PlayerNameInput = () => {
 
   const savePlayerName = () => {
     const playerName = playerNameInputRef.current?.value;
-    if (!playerName || playerName.length > 12) {
-      alert('닉네임 조건 (최대 12글자)');
+    if (!playerName || playerName.length > 10) {
+      alert('닉네임 조건 (최대 10글자)');
       return;
     }
     const newUUID = uuid();
