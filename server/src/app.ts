@@ -22,7 +22,7 @@ const io = new Server(server, {
   }
 });
 
-const ROUND_NUM = 12;
+const ROUND_NUM = 3;
 const CHAT_CHANNEL = 'chat_channel';
 const rooms = new Map<string, Room>();
 const socketToUUID = new Map<string, string | undefined>(); // socketId - uuid, undefined
@@ -49,17 +49,21 @@ const removeSession = (socketId: string, uuid: string) => {
   }
 };
 
-const checkAllReady = (room: Room) => {
-  const playerCount = room.players.filter((player) => player !== null).length;
-  const readyUserCount = room.players.filter((player) => player !== null && player.isReady).length;
+// const checkAllReady = (room: Room) => {
+//   const playerCount = room.players.filter((player) => player !== null).length;
+//   const readyUserCount = room.players.filter((player) => player !== null && player.isReady).length;
 
-  if (playerCount <= readyUserCount) {
-    console.log(`Ready!!: ${readyUserCount}/${playerCount}`);
-    return true;
-  } else {
-    console.log(`not Ready: ${readyUserCount}/${playerCount}`);
-    return false;
-  }
+//   if (playerCount <= readyUserCount) {
+//     console.log(`Ready!!: ${readyUserCount}/${playerCount}`);
+//     return true;
+//   } else {
+//     console.log(`not Ready: ${readyUserCount}/${playerCount}`);
+//     return false;
+//   }
+// };
+
+const playerExists = (player: Player | null) => {
+  return player !== null && !player.isOut;
 };
 
 const getNextPlayer = (room: Room): [number, Player | null] => {
@@ -67,7 +71,7 @@ const getNextPlayer = (room: Room): [number, Player | null] => {
   let nextTurnDecided = false;
   let nextTurnIdx = room.turn ? (room.turn.idx + 1) % 6 : 0;
   for (let i = nextTurnIdx; i < 6; i++) {
-    if (room.players[i] !== null) {
+    if (playerExists(room.players[i])) {
       nextTurnIdx = i;
       nextTurnDecided = true;
       break;
@@ -75,12 +79,13 @@ const getNextPlayer = (room: Room): [number, Player | null] => {
   }
   if (!nextTurnDecided) {
     for (let i = 0; i < nextTurnIdx; i++) {
-      if (room.players[i] !== null) {
+      if (playerExists(room.players[i])) {
         nextTurnIdx = i;
         break;
       }
     }
   }
+
   return [nextTurnIdx, room.players[nextTurnIdx]];
 };
 
@@ -148,21 +153,25 @@ const endGame = (room: Room) => {
   const playerList = (room.players.filter((player) => player !== null) as Player[]).sort((a, b) =>
     a.answerCnt < b.answerCnt ? 1 : -1
   );
-  const result = playerList.reduce<{ rank: number; name: string; answerCnt: number }[]>(
-    (pre, cur, idx) => {
-      if (idx === 0) {
-        pre.push({ rank: 1, name: cur.name, answerCnt: cur.answerCnt });
+  const result = playerList.reduce<
+    { rank: number; name: string; answerCnt: number; isOut: boolean }[]
+  >((pre, cur, idx) => {
+    if (idx === 0) {
+      pre.push({ rank: 1, name: cur.name, answerCnt: cur.answerCnt, isOut: cur.isOut });
+    } else {
+      if (pre[pre.length - 1].answerCnt === cur.answerCnt) {
+        pre.push({
+          rank: pre[pre.length - 1].rank,
+          name: cur.name,
+          answerCnt: cur.answerCnt,
+          isOut: cur.isOut
+        });
       } else {
-        if (pre[pre.length - 1].answerCnt === cur.answerCnt) {
-          pre.push({ rank: pre[pre.length - 1].rank, name: cur.name, answerCnt: cur.answerCnt });
-        } else {
-          pre.push({ rank: idx + 1, name: cur.name, answerCnt: cur.answerCnt });
-        }
+        pre.push({ rank: idx + 1, name: cur.name, answerCnt: cur.answerCnt, isOut: cur.isOut });
       }
-      return pre;
-    },
-    []
-  );
+    }
+    return pre;
+  }, []);
 
   room.state = 'ready';
   room.intervalReason = undefined;
@@ -170,6 +179,10 @@ const endGame = (room: Room) => {
     const player = room.players[i];
     if (player !== null) {
       player.answerCnt = 0;
+
+      if (player.isOut) {
+        room.players[i] = null;
+      }
     }
   }
   room.quizIndices = [];
@@ -193,7 +206,7 @@ const updateGameStateIfNowPlaying = (uuid: string, roomId: string, room: Room) =
     room.state === 'start'
   ) {
     // 게임 참여 인원이 1명이라면?
-    if (room.players.filter((player) => player !== null).length < 2) {
+    if (room.players.filter((player) => playerExists(player)).length < 2) {
       room.lastUpdated = Date.now();
       room.state = 'interval';
       room.intervalReason = 'needPlayer';
@@ -269,7 +282,7 @@ io.on('connection', (socket) => {
 
     if (rooms.size >= 10) {
       socket.emit('onError', {
-        message: '현재 만들 수 있는 방이 없습니다.\n(총 10개까지 만들 수 있습니다)'
+        message: '더이상 생성할 수 있는 방이 없습니다.\n(서버 내에서 최대 10개)'
       });
       return;
     }
@@ -290,7 +303,7 @@ io.on('connection', (socket) => {
       uuidSet: new Set<string>()
     };
 
-    room.players[0] = { name: playerName, uuid, isMaster: true, answerCnt: 0, isReady: true };
+    room.players[0] = { name: playerName, uuid, isMaster: true, answerCnt: 0, isOut: false };
     room.socketIdSet.add(socket.id);
     room.uuidSet.add(uuid);
     rooms.set(roomId, room);
@@ -310,7 +323,7 @@ io.on('connection', (socket) => {
       currentRound: room.currentRound,
       level: room.level,
       state: room.state,
-      userCount: room.players.filter((item) => item !== null).length,
+      userCount: room.players.filter((player) => playerExists(player)).length,
       kickedUserUUIDSet: room.kickedUserUUIDSet
     }));
     socket.emit('onRoomListRefreshed', parsedRoom);
@@ -332,7 +345,7 @@ io.on('connection', (socket) => {
     }
 
     // 게임 방의 인원수가 가득 차있는지
-    if (room.players.filter((player) => player === null).length === 0) {
+    if (room.players.filter((player) => playerExists(player)).length === 6) {
       socket.emit('onError', { message: '이미 가득 찬 방입니다.' });
       return;
     }
@@ -355,7 +368,7 @@ io.on('connection', (socket) => {
         uuid,
         isMaster: room.master.uuid === uuid,
         answerCnt: 0,
-        isReady: false
+        isOut: false
       };
     }
     socket.emit('onRoomJoined', roomId);
@@ -417,7 +430,14 @@ io.on('connection', (socket) => {
         room.uuidSet.delete(uuid);
         const playerIdx = room.players.findIndex((player) => player?.uuid === uuid);
         if (playerIdx >= 0) {
-          room.players[playerIdx] = null;
+          const player = room.players[playerIdx];
+          if (player) {
+            if (room.state === 'ready') {
+              room.players[playerIdx] = null;
+            } else {
+              player.isOut = true;
+            }
+          }
         }
         io.to(roomId).emit('onPlayerRefreshed', room.players);
         updateGameStateIfNowPlaying(uuid, roomId, room);
@@ -436,12 +456,7 @@ io.on('connection', (socket) => {
     room.lastUpdated = Date.now();
     room.state = 'start';
     room.quizIndices = getQuizIndices(room.level);
-    for (let i = 0; i < 6; i++) {
-      const player = room.players[i];
-      if (player) {
-        player.isReady = false;
-      }
-    }
+
     io.to(roomId).emit('onGameStarted', {
       state: room.state,
       currentRound: room.currentRound,
@@ -475,7 +490,7 @@ io.on('connection', (socket) => {
         message.replace(/(\s*)/g, '').toLowerCase()
       ) {
         const player = room.players.find((player) => player?.uuid === uuid);
-        if (player && player !== null) {
+        if (player && !player.isOut) {
           player.answerCnt++;
         }
         room.lastUpdated = Date.now();
@@ -597,25 +612,25 @@ io.on('connection', (socket) => {
   });
 
   // 16. 사용자 추방 - 완료
-  socket.on('kickUser', ({ roomId, kickedUUID }) => {
-    const room = rooms.get(roomId);
-    if (!room) {
-      socket.emit('onError', { message: '존재하지 않는 방입니다.' });
-      return;
-    }
+  // socket.on('kickUser', ({ roomId, kickedUUID }) => {
+  //   const room = rooms.get(roomId);
+  //   if (!room) {
+  //     socket.emit('onError', { message: '존재하지 않는 방입니다.' });
+  //     return;
+  //   }
 
-    const kickedUserSocketList = UUIDToSocketList.get(kickedUUID);
-    const kickedUserSocketId = kickedUserSocketList?.find(
-      (socketId) => socketToRoomId.get(socketId) === roomId
-    );
+  //   const kickedUserSocketList = UUIDToSocketList.get(kickedUUID);
+  //   const kickedUserSocketId = kickedUserSocketList?.find(
+  //     (socketId) => socketToRoomId.get(socketId) === roomId
+  //   );
 
-    if (kickedUserSocketId) {
-      room.kickedUserUUIDSet.add(kickedUUID);
-      room.uuidSet.delete(kickedUUID);
-      room.socketIdSet.delete(kickedUserSocketId);
-      io.to(kickedUserSocketId).emit('onKicked');
-    }
-  });
+  //   if (kickedUserSocketId) {
+  //     room.kickedUserUUIDSet.add(kickedUUID);
+  //     room.uuidSet.delete(kickedUUID);
+  //     room.socketIdSet.delete(kickedUserSocketId);
+  //     io.to(kickedUserSocketId).emit('onKicked');
+  //   }
+  // });
 
   // 17. disconnect - 완료
   socket.on('disconnect', () => {
@@ -643,7 +658,14 @@ io.on('connection', (socket) => {
           room.socketIdSet.delete(socket.id);
           const playerIdx = room.players.findIndex((player) => player?.uuid === uuid);
           if (playerIdx >= 0) {
-            room.players[playerIdx] = null;
+            const player = room.players[playerIdx];
+            if (player) {
+              if (room.state === 'ready') {
+                room.players[playerIdx] = null;
+              } else {
+                player.isOut = true;
+              }
+            }
           }
           io.to(roomId).emit('onPlayerRefreshed', room.players);
           updateGameStateIfNowPlaying(uuid, roomId, room);

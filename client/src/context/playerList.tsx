@@ -1,6 +1,5 @@
 import React, { createContext, useState } from 'react';
 import { Player } from 'types/player';
-import { RoomGameState } from 'types/room';
 
 interface PlayerListContextDefault {
   playerList: (Player | null)[];

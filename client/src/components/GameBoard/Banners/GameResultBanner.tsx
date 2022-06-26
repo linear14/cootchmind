@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { GameResult } from 'types/result';
 
 const Container = styled.div`
@@ -36,7 +36,7 @@ const ResultContainer = styled.div`
   }
 `;
 
-const ResultItem = styled.div`
+const ResultItem = styled.div<{ out?: boolean }>`
   width: 100%;
   display: flex;
   padding: 0.5rem 1rem;
@@ -50,6 +50,14 @@ const ResultItem = styled.div`
   span {
     text-align: center;
   }
+
+  ${({ out }) =>
+    out &&
+    css`
+      span {
+        color: #cccccc;
+      }
+    `}
 `;
 
 const Rank = styled.span`
@@ -88,7 +96,7 @@ const GameResultBanner = ({ result }: Props) => {
         {result.map(
           (player) =>
             player && (
-              <ResultItem>
+              <ResultItem out={player.isOut}>
                 <Rank>{player.rank}</Rank>
                 <PlayerName>{player.name}</PlayerName>
                 <AnswerCount>{player.answerCnt}점</AnswerCount>

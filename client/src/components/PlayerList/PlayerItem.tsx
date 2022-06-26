@@ -1,21 +1,29 @@
 import { SocketContext } from 'context/socket';
 import { useContext, useEffect, useRef, useState } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import { Player } from 'types/player';
 
-const Container = styled.div<{ highlight: boolean }>`
+const Container = styled.div<{ highlight: boolean; out: boolean }>`
   position: relative;
   width: 100%;
   height: 80px;
   padding: 0.5rem;
 
   border: ${({ highlight }) => (highlight ? '2px solid red' : '2px solid #cccccc')};
-  background-color: white;
+  background-color: ${({ out }) => (out ? 'rgba(0, 0, 0, 0.1)' : 'white')};
 
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
+  ${({ out }) =>
+    out &&
+    css`
+      div {
+        color: #aaaaaa;
+      }
+    `}
 `;
 
 const PlayerName = styled.div`
@@ -69,7 +77,7 @@ const PlayerItem = ({ player, turnHighlight }: PlayerItemProps) => {
   }, [socket, player?.uuid]);
 
   return (
-    <Container highlight={turnHighlight}>
+    <Container highlight={turnHighlight} out={player !== null && player.isOut}>
       <PlayerName>{player && player.name}</PlayerName>
       <AnswerCount>{player && `정답수 : ${player.answerCnt}`}</AnswerCount>
       {message && <Message>{message}</Message>}

@@ -11,4 +11,5 @@ export interface GameResult {
   rank: number;
   name: string;
   answerCnt: number;
+  isOut: boolean;
 }
