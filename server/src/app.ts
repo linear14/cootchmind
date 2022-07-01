@@ -253,8 +253,6 @@ const updateGameStateIfNowPlaying = (uuid: string, roomId: string, room: Room) =
 io.on('connection', (socket) => {
   socketToUUID.set(socket.id, undefined);
 
-  // 1. 비정상 접근
-  socket.on('initUserState', () => {});
 
   // 2. 사용자 정보 저장 - 완료
   socket.on('saveUser', ({ uuid }) => {
