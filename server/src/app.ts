@@ -252,15 +252,20 @@ io.on('connection', (socket) => {
   // 1. 사용자 정보 저장
   socket.on('joinChatChannel', () => {
     socket.join(CHAT_CHANNEL);
+
+    const room = rooms.get(socket.id);
+    if (room) {
+      socket.leave(room.roomId);
+    }
   });
 
   // 2. 대기실 채팅
-  socket.on('chat', ({ playerName, message }) => {
-    io.to(CHAT_CHANNEL).emit('onChat', { playerName, message });
+  socket.on('chat', ({ name, message }) => {
+    io.to(CHAT_CHANNEL).emit('onChat', { name, message });
   });
 
   // 3. 방 생성
-  socket.on('createRoom', ({ playerName, title, level }) => {
+  socket.on('createRoom', ({ name, title, level }) => {
     if (rooms.size >= 10) {
       socket.emit('onError', {
         message: '더이상 생성할 수 있는 방이 없습니다.\n(서버 내에서 최대 10개)'
@@ -273,7 +278,7 @@ io.on('connection', (socket) => {
       roomId,
       title,
       players: Array.from({ length: 6 }, () => null),
-      master: { name: playerName, socketId: socket.id },
+      master: { name, socketId: socket.id },
       quizIndices: [],
       currentRound: 0,
       state: 'ready',
@@ -283,7 +288,7 @@ io.on('connection', (socket) => {
     };
 
     room.players[0] = {
-      name: playerName,
+      name,
       socketId: socket.id,
       isMaster: true,
       answerCnt: 0,
@@ -311,7 +316,7 @@ io.on('connection', (socket) => {
   });
 
   // 5. 방 입장 시도
-  socket.on('tryEnterRoom', ({ playerName, roomId }) => {
+  socket.on('tryEnterRoom', ({ name, roomId }) => {
     // 게임 방이 존재하는지
     const room = rooms.get(roomId);
     if (!room) {
@@ -325,6 +330,12 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // 동일 닉네임 유저 존재여부
+    if (room.players.filter((player) => player?.name === name).length > 0) {
+      socket.emit('onError', { message: '동일 닉네임의 유저가 이미 접속중입니다.' });
+      return;
+    }
+
     // 게임 방의 인원수가 가득 차있는지
     if (room.players.filter((player) => playerExists(player)).length === 6) {
       socket.emit('onError', { message: '이미 가득 찬 방입니다.' });
@@ -334,7 +345,7 @@ io.on('connection', (socket) => {
     const emptyIdx = room.players.findIndex((player) => player === null);
     if (emptyIdx >= 0 && emptyIdx < 6) {
       room.players[emptyIdx] = {
-        name: playerName,
+        name,
         socketId: socket.id,
         isMaster: room.master.socketId === socket.id,
         answerCnt: 0,
@@ -364,16 +375,19 @@ io.on('connection', (socket) => {
       socket.leave(CHAT_CHANNEL);
       socket.join(roomId);
 
-      socket.emit('onRoomEntered', {
-        roomId: room.roomId,
-        title: room.title,
-        master: room.master,
-        players: room.players,
-        currentRound: room.currentRound,
-        state: room.state,
-        turn: room.turn,
+      socket.emit(
+        'onRoomEntered',
+        {
+          roomId: room.roomId,
+          title: room.title,
+          master: room.master,
+          players: room.players,
+          currentRound: room.currentRound,
+          state: room.state,
+          turn: room.turn
+        },
         myTurn
-      });
+      );
 
       socket.to(roomId).emit('onPlayerRefreshed', room.players);
     }
