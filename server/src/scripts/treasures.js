@@ -93,7 +93,8 @@ const treasures = [
   '짝짝짝 응원수술',
   '알사탕 피에로 슈즈',
   '마그마 펜듈럼',
-  '불꽃의 정수'
+  '불꽃의 정수',
+  '어린 용의 발톱'
 ];
 
 module.exports = treasures;

@@ -10,7 +10,9 @@ const contents = [
   '팀파이트',
   '커스텀런',
   '길드전',
-  '기억의 섬'
+  '기억의 섬',
+  '우정런',
+  '쿠짱클럽'
 ];
 
 module.exports = contents;
