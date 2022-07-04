@@ -1,7 +1,6 @@
 import { GameStateContext } from 'context/game';
 import { RoomContext } from 'context/room';
 import { SocketContext } from 'context/socket';
-import { UserContext } from 'context/user';
 import React, {
   useCallback,
   useEffect,
@@ -35,8 +34,7 @@ const THROTTLING_TIME = 1000;
 const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
   ({ canvasWidth, canvasHeight }, canvasRef) => {
     const socket = useContext(SocketContext);
-    const { uuid } = useContext(UserContext);
-    const { roomId } = useContext(RoomContext);
+    const { roomId, myTurn } = useContext(RoomContext);
     const { state, turn } = useContext(GameStateContext);
     const [isDrawing, setDrawing] = useState<boolean>(false);
     const [startDrawingTime, setStartDrawingTime] = useState<number>(0);
@@ -54,8 +52,8 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
     const animationRef = useRef<number>();
 
     const canDraw = useMemo(
-      () => state === 'play' && turn?.uuid === uuid,
-      [state, turn?.uuid, uuid]
+      () => state === 'play' && myTurn && turn?.idx === myTurn - 1,
+      [state, turn?.idx, myTurn]
     );
 
     const initCanvas = useCallback(
@@ -199,10 +197,9 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
         return;
       }
 
-      if (uuid && isDrawing && canDraw) {
+      if (isDrawing && canDraw) {
         const drawingTime = Date.now() - startDrawingTime;
         socket.emit('submitPaint', {
-          uuid,
           roomId,
           time: drawingTime,
           pointList: toServerPointListRef.current
@@ -213,7 +210,7 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
       setDrawing(false);
       setStartDrawingTime(0);
       toServerPointListRef.current = [];
-    }, [socket, roomId, uuid, startDrawingTime, initCanvasContext, isDrawing, canDraw]);
+    }, [socket, roomId, startDrawingTime, initCanvasContext, isDrawing, canDraw]);
 
     useEffect(() => {
       if (canvasWidth && canvasHeight && canvasRef) {
@@ -262,7 +259,7 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
     }, [socket, canvasRef]);
 
     useEffect(() => {
-      const isWaitingServerDrawingData = state === 'play' && turn?.uuid !== uuid;
+      const isWaitingServerDrawingData = state === 'play' && myTurn && turn?.idx !== myTurn - 1;
 
       function drawFromServer() {
         if (isWaitingServerDrawingData) {
@@ -299,7 +296,7 @@ const SketchBook = React.forwardRef<HTMLCanvasElement, SketchBookProps>(
         }
       }
       animationRef.current = requestAnimationFrame(drawFromServer);
-    }, [state, turn, uuid, fromServerPointList, pointerToDrawingServerItems, drawServerItem]);
+    }, [state, turn, myTurn, fromServerPointList, pointerToDrawingServerItems, drawServerItem]);
 
     // 라운드가 종료 될 때 마다 데이터 초기화가 필요합니다.
     useEffect(() => {

@@ -7,9 +7,8 @@ import ChatRegion from 'components/ChatRegion';
 import RoomList from 'components/RoomList';
 import RoomGeneratorModal from 'components/ui/RoomGeneratorModal';
 import { RoomListItem } from 'types/room';
-import { getLocalStorageUser } from 'helpers/authUtil';
+import { getLocalStorageUser, resetLocalStorageUser } from 'helpers/authUtil';
 import { UserContext } from 'context/user';
-import useCheckValidUser from 'helpers/useCheckValidUser';
 import { GOOGLE_FORM_LINK, NOTION_LINK } from 'helpers/constants';
 
 const Container = styled.div`
@@ -89,22 +88,13 @@ const Button = styled.button.attrs({
 `;
 
 const RoomListPage = () => {
-  const { uuid, playerName, setUser } = useContext(UserContext);
-  const [roomList, setRoomList] = useState<(RoomListItem | null)[]>([]);
-  const [roomModal, setRoomModal] = useState<boolean>(false);
-
   const navigate = useNavigate();
   const socket = useContext(SocketContext);
-  const { check, initializeUser } = useCheckValidUser();
 
-  const createRoom = useCallback(
-    (title: string, level: number) => {
-      if (check() && socket && uuid && playerName) {
-        socket.emit('createRoom', { uuid, playerName, title, level });
-      }
-    },
-    [socket, check, uuid, playerName]
-  );
+  const { name, setName } = useContext(UserContext);
+  const [isLoading, setLoading] = useState<boolean>(true);
+  const [roomList, setRoomList] = useState<(RoomListItem | null)[]>([]);
+  const [roomModal, setRoomModal] = useState<boolean>(false);
 
   const handleRoomModal = () => {
     setRoomModal((prev) => !prev);
@@ -116,22 +106,39 @@ const RoomListPage = () => {
     }
   }, [socket]);
 
+  const createRoom = useCallback(
+    (title: string, level: number) => {
+      if (socket && name) {
+        socket.emit('createRoom', { name, title, level });
+      }
+    },
+    [socket, name]
+  );
+
+  const moveToLoginPage = useCallback(() => {
+    console.log('RoomListPage #moveToLoginPage');
+    resetLocalStorageUser();
+    setName(undefined);
+    navigate('/login');
+  }, [navigate, setName]);
+
   /**
    * 페이지 접근 시 로그인 상태 확인
    * 1. 로그인 안되어 있는 경우 -> login 페이지로 이동
    * 2. 로그인 되어있는 경우 -> 서버에 로그인 uuid 저장 및 클라이언트 회원정보 저장
    **/
   useEffect(() => {
-    const { uuid: localStorageUUID, playerName: localStoragePN } = getLocalStorageUser();
-    if (!localStorageUUID || !localStoragePN) {
+    const { name } = getLocalStorageUser();
+    if (!name) {
       navigate('/login', { replace: true });
       return;
     }
-    if (socket && uuid !== localStorageUUID && playerName !== localStoragePN) {
-      socket.emit('saveUser', { uuid: localStorageUUID });
-      setUser({ uuid: localStorageUUID, playerName: localStoragePN });
+    if (socket && isLoading) {
+      setName(name);
+      setLoading(false);
+      socket.emit('joinChatChannel');
     }
-  }, [navigate, setUser, socket, uuid, playerName]);
+  }, [navigate, setName, socket, isLoading]);
 
   // 페이지 접근 시 방 목록 초기화
   useEffect(() => {
@@ -172,15 +179,13 @@ const RoomListPage = () => {
     };
   }, [socket, navigate]);
 
-  if (!uuid && !playerName) return null;
-
   return (
     <Container>
       <Header>
         <Logo src='/images/logo.svg' />
         <HeaderRight>
-          <CurrentUser onClick={initializeUser}>
-            <span>{playerName}</span>님
+          <CurrentUser onClick={moveToLoginPage}>
+            <span>{name}</span>님
           </CurrentUser>
           <Button>
             <a target='_blank' href={NOTION_LINK} rel='noreferrer'>

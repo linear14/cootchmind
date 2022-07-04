@@ -19,7 +19,7 @@ interface ChatProps {
 const ChatItem = ({ item }: ChatProps) => {
   return (
     <Container>
-      <span>{`${item.playerName} : `}</span>
+      <span>{`${item.name} : `}</span>
       {item.message}
     </Container>
   );

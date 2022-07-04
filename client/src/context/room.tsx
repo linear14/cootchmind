@@ -9,6 +9,7 @@ const RoomContext = createContext<RoomContextDefault>({
   roomId: undefined,
   title: undefined,
   master: undefined,
+  myTurn: undefined,
   setRoom: (room: RoomDataImmutable) => {}
 });
 

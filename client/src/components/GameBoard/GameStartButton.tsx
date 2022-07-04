@@ -2,7 +2,6 @@ import { GameStateContext } from 'context/game';
 import { PlayerListContext } from 'context/playerList';
 import { RoomContext } from 'context/room';
 import { SocketContext } from 'context/socket';
-import { UserContext } from 'context/user';
 import { useCallback, useContext } from 'react';
 import styled from 'styled-components';
 
@@ -25,8 +24,7 @@ const Container = styled.button`
 
 const GameStartButton = () => {
   const socket = useContext(SocketContext);
-  const { uuid } = useContext(UserContext);
-  const { roomId, master } = useContext(RoomContext);
+  const { roomId, myTurn } = useContext(RoomContext);
   const { state } = useContext(GameStateContext);
   const { playerList } = useContext(PlayerListContext);
 
@@ -37,13 +35,14 @@ const GameStartButton = () => {
   }, [socket, roomId]);
 
   const isGameAvailable = useCallback(() => {
-    if (!uuid || !roomId || !master || !state) return false;
+    console.log('GameStartButton #isGameAvailable');
+    if (!roomId || !state) return false;
     return (
       state === 'ready' &&
-      master.uuid === uuid &&
+      myTurn === 1 &&
       playerList.filter((player) => player !== null).length >= 2
     );
-  }, [uuid, roomId, master, state, playerList]);
+  }, [roomId, state, playerList, myTurn]);
 
   if (!isGameAvailable()) return null;
   return (

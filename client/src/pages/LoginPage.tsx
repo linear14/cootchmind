@@ -15,21 +15,19 @@ const Container = styled.div`
 `;
 
 const LoginPage = () => {
-  const [isLoading, setLoading] = useState(true);
-
-  const { setUser } = useContext(UserContext);
-
   const navigate = useNavigate();
 
+  const [isLoading, setLoading] = useState(true);
+  const { setName } = useContext(UserContext);
+
   useEffect(() => {
-    const { playerName, uuid } = getLocalStorageUser();
-    if (playerName && uuid) {
-      setUser({ uuid, playerName });
+    const { name } = getLocalStorageUser();
+    if (name) {
       navigate('/', { replace: true });
       return;
     }
     setLoading(false);
-  }, [navigate, setUser]);
+  }, [navigate, setName]);
 
   if (isLoading) return null;
 

@@ -1,7 +1,6 @@
 import { GameStateContext } from 'context/game';
 import { RoomContext } from 'context/room';
 import { SocketContext } from 'context/socket';
-import { UserContext } from 'context/user';
 import { useCallback, useContext, useRef } from 'react';
 import styled from 'styled-components';
 
@@ -23,8 +22,7 @@ const Form = styled.form`
 
 const AnswerInput = () => {
   const socket = useContext(SocketContext);
-  const { roomId } = useContext(RoomContext);
-  const { uuid } = useContext(UserContext);
+  const { roomId, myTurn } = useContext(RoomContext);
   const { state, turn } = useContext(GameStateContext);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -37,17 +35,17 @@ const AnswerInput = () => {
         inputRef.current.value = '';
       }
 
-      if (state === 'play' && turn?.uuid === uuid) return;
+      if (state === 'play' && myTurn && turn?.idx === myTurn - 1) return;
 
-      if (state && roomId && uuid && message) {
+      if (state && roomId && myTurn && message) {
         if (state === 'play') {
-          socket.emit('submitAnswer', { uuid, roomId, message });
+          socket.emit('submitAnswer', { myTurn, roomId, message });
         } else {
-          socket.emit('chatInGame', { uuid, roomId, message });
+          socket.emit('chatInGame', { myTurn, roomId, message });
         }
       }
     },
-    [socket, roomId, uuid, state, turn]
+    [socket, roomId, state, turn, myTurn]
   );
 
   return (

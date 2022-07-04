@@ -1,7 +1,8 @@
 export interface Player {
-  uuid: string;
+  socketId: string;
   name: string;
   isMaster: boolean;
   answerCnt: number;
   isOut: boolean;
+  turn: number;
 }

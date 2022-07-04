@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import { SocketContext } from 'context/socket';
 import { RoomContext } from 'context/room';
 import { GameStateContext } from 'context/game';
-import { UserContext } from 'context/user';
 
 const Container = styled.div`
   width: 160px;
@@ -32,10 +31,9 @@ interface TimerProps {
 
 const Timer = ({ playTime }: TimerProps) => {
   const socket = useContext(SocketContext);
-  const { roomId } = useContext(RoomContext);
+  const { roomId, myTurn } = useContext(RoomContext);
   const { state: gameState, turn } = useContext(GameStateContext);
   const [timerState, setTimerState] = useState<TimerState>(TimerState.END);
-  const { uuid } = useContext(UserContext);
 
   const [remainSec, setRemainSec] = useState<number>(0);
   const [m, s] = [Math.floor(remainSec / 60), remainSec % 60];
@@ -66,12 +64,11 @@ const Timer = ({ playTime }: TimerProps) => {
   useEffect(() => {
     if (gameState === 'play' && timerState === TimerState.RUNNING && remainSec === 0) {
       stopTimer();
-      if (turn?.uuid === uuid) {
-        console.log('forceStopRound실행');
-        socket.emit('forceStopRound', { uuid, roomId });
+      if (myTurn && turn?.idx === myTurn - 1) {
+        socket.emit('forceStopRound', { roomId });
       }
     }
-  }, [gameState, remainSec, roomId, uuid, socket, timerState, turn?.uuid, stopTimer]);
+  }, [gameState, remainSec, roomId, socket, timerState, turn?.idx, stopTimer, myTurn]);
 
   return (
     <Container>

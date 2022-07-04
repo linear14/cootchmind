@@ -47,44 +47,46 @@ const GamePage = () => {
   const navigate = useNavigate();
 
   const { roomId } = useParams();
+  const { name } = useContext(UserContext);
   const { setRoom } = useContext(RoomContext);
   const { setGameState } = useContext(GameStateContext);
   const { setPlayerList } = useContext(PlayerListContext);
   const [answer, setAnswer] = useState<string>();
-
-  const { uuid, playerName } = useContext(UserContext);
   const [isLoading, setLoading] = useState(true);
 
   /**
    * 페이지 접근 시 url로 들어오는 경우 이전 페이지로 튕기도록 설정
    **/
   useEffect(() => {
-    if (!playerName || !uuid) {
+    console.log('GamePage #useEffect check correct access');
+    if (!name) {
       navigate('/', { replace: true });
       return;
     }
-  }, [navigate, playerName, uuid]);
+  }, [name, navigate]);
 
   // 방 입장 (from url / from previous page)시 정상적으로 접속했는지 여부 판단하는 이벤트 발생
   // 방 퇴장시 이벤트 발생
   useEffect(() => {
-    if (socket && roomId && playerName && uuid) {
-      socket.emit('enterRoom', { uuid, roomId });
+    if (socket && roomId && name) {
+      socket.emit('enterRoom', { roomId });
 
       return () => {
-        socket.emit('leaveRoom', { uuid, roomId });
+        socket.emit('leaveRoom', { roomId });
       };
     }
-  }, [socket, roomId, playerName, uuid]);
+  }, [socket, roomId, name]);
 
   // [이벤트 등록] 방에 성공적으로 입장했을 경우 발생하는 이벤트
   useEffect(() => {
+    console.log('GamePage #useEffect listen onRoomEntered');
     if (socket) {
-      socket.on('onRoomEntered', (room: Room) => {
+      socket.on('onRoomEntered', (room: Room, myTurn: number) => {
         const roomDataImmutable = {
           roomId: room.roomId,
           title: room.title,
-          master: room.master as Required<User>
+          master: room.master as Required<User>,
+          myTurn
         };
         const gameState = {
           state: room.state,
@@ -104,6 +106,7 @@ const GamePage = () => {
 
   // [이벤트 등록] 플레이어 변동이 있을 경우에 발생하는 이벤트
   useEffect(() => {
+    console.log('GamePage #useEffect listen onPlayerRefreshed');
     if (socket) {
       socket.on('onPlayerRefreshed', (players: (Player | null)[]) => {
         setPlayerList(players);
@@ -116,6 +119,7 @@ const GamePage = () => {
 
   // [이벤트 등록] 새로운 게임이 시작 되었을 때 발생하는 이벤트
   useEffect(() => {
+    console.log('GamePage #useEffect listen onGameStarted');
     if (socket) {
       // 요거 currentRound랑 turn은 받을 필요 없는데 억지로 받고있음..
       // (prev로 받을 수 있도록 처리하고 서버에서도 데이터 전달하지 않도록 수정하자)
@@ -132,6 +136,7 @@ const GamePage = () => {
 
   // [이벤트 등록] 새로운 라운드가 준비 되었을 때 발생하는 이벤트
   useEffect(() => {
+    console.log('GamePage #useEffect listen onRoundReady');
     if (socket) {
       socket.on('onRoundReady', ({ state, currentRound, turn, answer }) => {
         setGameState({
@@ -150,6 +155,7 @@ const GamePage = () => {
 
   // [이벤트 등록] 새로운 라운드가 시작 되었을 때 발생하는 이벤트
   useEffect(() => {
+    console.log('GamePage #useEffect listen onRoundStarted');
     if (socket) {
       socket.on('onRoundStarted', ({ state, currentRound, turn }) => {
         setGameState({

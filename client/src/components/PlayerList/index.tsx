@@ -31,7 +31,7 @@ const PlayerList = () => {
     <Container>
       {playerList.map((item, idx) => (
         <PlayerItem
-          key={item?.uuid ?? `pi${idx}`}
+          key={item?.socketId ?? `pi${idx}`}
           player={item}
           turnHighlight={turnIndex === idx}
         />

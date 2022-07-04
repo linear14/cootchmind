@@ -8,7 +8,7 @@ export interface Room {
   players: (Player | null)[];
   currentRound: number;
   state: GameState;
-  turn?: { name: string; uuid: string; idx: number };
+  turn?: { name: string; idx: number };
 }
 
 export interface RoomListItem {
@@ -19,19 +19,19 @@ export interface RoomListItem {
   state: GameState;
   level: number;
   userCount: number;
-  kickedUserUUIDList: string[];
 }
 
 export interface RoomDataImmutable {
   roomId: string;
   title: string;
   master: Required<User>;
+  myTurn: number;
 }
 
 export interface RoomGameState {
   state: GameState;
   currentRound: number;
-  turn?: { name: string; uuid: string; idx: number };
+  turn?: { name: string; idx: number };
 }
 
 // 시작 전, 라운드 넘어가는 사이 중간 상태, 게임 진행중인 상태

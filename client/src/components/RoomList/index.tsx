@@ -54,18 +54,18 @@ interface RoomListProps {
 }
 
 const RoomList = ({ listItem, onShowCreateRoomModal, onRefreshRoomList }: RoomListProps) => {
-  const { uuid, playerName } = useContext(UserContext);
   const socket = useContext(SocketContext);
-  const { check } = useCheckValidUser();
+
+  const { name } = useContext(UserContext);
   const [canRefreshRoomList, setCanRefreshRoomList] = useState<boolean>(true);
 
   const tryEnterRoom = useCallback(
     (roomId: string) => {
-      if (check()) {
-        socket.emit('tryEnterRoom', { uuid, playerName, roomId });
+      if (name) {
+        socket.emit('tryEnterRoom', { name, roomId });
       }
     },
-    [check, socket, uuid, playerName]
+    [socket, name]
   );
 
   const handleRefreshRoomList = useCallback(() => {

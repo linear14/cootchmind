@@ -1,6 +1,12 @@
 export const getLocalStorageUser = () => {
-  const playerName = localStorage.getItem('player-name');
-  const uuid = localStorage.getItem('uuid');
+  const name = localStorage.getItem('name');
+  return { name };
+};
 
-  return { playerName, uuid };
+export const setLocalStorageUser = (name: string) => {
+  localStorage.setItem('name', name);
+};
+
+export const resetLocalStorageUser = () => {
+  localStorage.removeItem('name');
 };

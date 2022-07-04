@@ -1,7 +1,6 @@
 import { GameStateContext } from 'context/game';
 import { RoomContext } from 'context/room';
 import { SocketContext } from 'context/socket';
-import { UserContext } from 'context/user';
 import { useCallback, useContext } from 'react';
 import styled from 'styled-components';
 
@@ -33,8 +32,7 @@ interface PaletteProps {
 
 const Palette = ({ canvasRef }: PaletteProps) => {
   const socket = useContext(SocketContext);
-  const { roomId } = useContext(RoomContext);
-  const { uuid } = useContext(UserContext);
+  const { roomId, myTurn } = useContext(RoomContext);
   const { state, turn } = useContext(GameStateContext);
 
   const setColor = useCallback(
@@ -53,11 +51,11 @@ const Palette = ({ canvasRef }: PaletteProps) => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
 
-    if (canvas && context && state === 'play' && turn?.uuid === uuid) {
+    if (canvas && context && state === 'play' && myTurn && turn?.idx === myTurn - 1) {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      socket.emit('clearPaint', { uuid, roomId });
+      socket.emit('clearPaint', { roomId });
     }
-  }, [socket, canvasRef, roomId, state, turn?.uuid, uuid]);
+  }, [socket, canvasRef, roomId, state, turn?.idx, myTurn]);
 
   return (
     <Container>

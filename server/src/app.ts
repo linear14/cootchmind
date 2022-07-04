@@ -24,7 +24,8 @@ const io = new Server(server, {
 
 const ROUND_NUM = 12;
 const CHAT_CHANNEL = 'chat_channel';
-const rooms = new Map<string, Room>();
+const socketToRoomId = new Map<string, string | undefined>(); // socketId - roomId
+const rooms = new Map<string, Room>(); // roomId - Room
 
 const playerExists = (player: Player | null) => {
   return player !== null && !player.isOut;
@@ -249,13 +250,15 @@ const leaveRoom = (room: Room, userSocketId: string) => {
 };
 
 io.on('connection', (socket) => {
+  socketToRoomId.set(socket.id, undefined);
+
   // 1. 사용자 정보 저장
   socket.on('joinChatChannel', () => {
     socket.join(CHAT_CHANNEL);
 
-    const room = rooms.get(socket.id);
-    if (room) {
-      socket.leave(room.roomId);
+    const roomId = socketToRoomId.get(socket.id);
+    if (roomId) {
+      socket.leave(roomId);
     }
   });
 
@@ -297,6 +300,7 @@ io.on('connection', (socket) => {
     };
     room.socketIdSet.add(socket.id);
     rooms.set(roomId, room);
+    socketToRoomId.set(socket.id, roomId);
     socket.emit('onRoomCreated', roomId);
   });
 
@@ -354,6 +358,7 @@ io.on('connection', (socket) => {
       };
 
       room.socketIdSet.add(socket.id);
+      socketToRoomId.set(socket.id, roomId);
       socket.emit('onRoomJoined', roomId);
     } else {
       socket.emit('onError', { message: '이미 가득 찬 방입니다.' });
@@ -399,6 +404,7 @@ io.on('connection', (socket) => {
     if (room) {
       socket.leave(roomId);
       socket.join(CHAT_CHANNEL);
+      socketToRoomId.delete(socket.id);
 
       // 방장인 경우
       if (room.master.socketId === socket.id) {
@@ -575,13 +581,14 @@ io.on('connection', (socket) => {
 
   // 14. disconnect
   socket.on('disconnect', () => {
-    const room = rooms.get(socket.id);
+    const roomId = socketToRoomId.get(socket.id);
+    const room = roomId && rooms.get(roomId);
 
     // 게임 중에 접속을 종료했다.
-    if (room) {
-      const roomId = room.roomId;
+    if (roomId && room) {
       socket.leave(roomId);
       socket.join(CHAT_CHANNEL);
+      socketToRoomId.delete(socket.id);
 
       // 방장인 경우
       if (room.master.socketId === socket.id) {
@@ -594,26 +601,27 @@ io.on('connection', (socket) => {
       }
     }
   });
+});
 
-  server.listen('4000', () => {
-    console.log('Socket server listening on port 4000');
+server.listen('4000', () => {
+  console.log('Socket server listening on port 4000');
+});
+
+cron.schedule('* * * * *', () => {
+  const deleteRooms: Room[] = [];
+  const now = Date.now();
+  rooms.forEach((room) => {
+    if (room.state === 'ready' && now - room.lastUpdated > 2 * 60 * 1000) {
+      deleteRooms.push(room);
+    }
   });
 
-  cron.schedule('* * * * *', () => {
-    const deleteRooms: Room[] = [];
-    const now = Date.now();
-    rooms.forEach((room) => {
-      if (room.state === 'ready' && now - room.lastUpdated > 2 * 60 * 1000) {
-        deleteRooms.push(room);
-      }
-    });
-
-    deleteRooms.forEach((room) => {
-      rooms.delete(room.roomId);
-      io.to(room.roomId).emit('onError', {
-        message: '일정 시간동안 방의 상태가 변하지 않아 방이 제거되었습니다.',
-        navigatePath: '/'
-      });
+  deleteRooms.forEach((room) => {
+    room.socketIdSet.forEach((socketId) => socketToRoomId.delete(socketId));
+    rooms.delete(room.roomId);
+    io.to(room.roomId).emit('onError', {
+      message: '일정 시간동안 방의 상태가 변하지 않아 방이 제거되었습니다.',
+      navigatePath: '/'
     });
   });
 });

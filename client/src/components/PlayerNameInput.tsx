@@ -1,7 +1,7 @@
+import { setLocalStorageUser } from 'helpers/authUtil';
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { v4 as uuid } from 'uuid';
 
 const Container = styled.div`
   width: 400px;
@@ -26,8 +26,9 @@ const Button = styled.button`
 `;
 
 const PlayerNameInput = () => {
-  const playerNameInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  const playerNameInputRef = useRef<HTMLInputElement>(null);
 
   const savePlayerName = () => {
     const playerName = playerNameInputRef.current?.value;
@@ -35,9 +36,8 @@ const PlayerNameInput = () => {
       alert('닉네임 조건 (최대 10글자)');
       return;
     }
-    const newUUID = uuid();
-    localStorage.setItem('player-name', playerName);
-    localStorage.setItem('uuid', newUUID);
+
+    setLocalStorageUser(playerName);
     navigate('/', { replace: true });
   };
 

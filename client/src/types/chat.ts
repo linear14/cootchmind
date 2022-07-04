@@ -1,4 +1,4 @@
 export interface Chat {
-  playerName: string;
+  name: string;
   message: string;
 }

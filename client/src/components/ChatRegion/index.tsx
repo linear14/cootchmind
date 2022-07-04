@@ -31,24 +31,23 @@ const ChatInput = styled.input`
 `;
 
 const ChatRegion = () => {
-  const { uuid, playerName } = useContext(UserContext);
+  const socket = useContext(SocketContext);
+
+  const { name } = useContext(UserContext);
   const [chatListItem, setChatListItems] = useState<Chat[]>([]);
   const [chatAvailable, setChatAvailalbe] = useState<boolean>(true);
   const [userChatTime, setUserChatTime] = useState<number[]>([]);
   const [chatBlocking, setChatBlocking] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const socket = useContext(SocketContext);
 
-  // 채팅 보내기 (별도의 회원 정보 위조여부 검사하지 않습니다.)
   const sendMessage = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
 
       const message = inputRef.current?.value;
 
-      if (playerName && uuid && message && chatAvailable && !chatBlocking) {
-        // 채팅 전송
-        socket.emit('chat', { playerName, message });
+      if (name && message && chatAvailable && !chatBlocking) {
+        socket.emit('chat', { name, message });
         inputRef.current.value = '';
         setChatAvailalbe(false);
 
@@ -74,7 +73,7 @@ const ChatRegion = () => {
         }
       }
     },
-    [socket, playerName, uuid, chatAvailable, chatBlocking, userChatTime]
+    [socket, name, chatAvailable, chatBlocking, userChatTime]
   );
 
   useEffect(() => {

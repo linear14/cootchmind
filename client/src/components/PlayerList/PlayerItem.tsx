@@ -59,12 +59,13 @@ interface PlayerItemProps {
 
 const PlayerItem = ({ player, turnHighlight }: PlayerItemProps) => {
   const socket = useContext(SocketContext);
+
   const [message, setMessage] = useState<string>();
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    socket.on('onChatInGame', ({ uuid, message }) => {
-      if (uuid === player?.uuid) {
+    socket.on('onChatInGame', ({ turn, message }) => {
+      if (turn === player?.turn) {
         setMessage(message);
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
@@ -74,7 +75,7 @@ const PlayerItem = ({ player, turnHighlight }: PlayerItemProps) => {
         }, 3000);
       }
     });
-  }, [socket, player?.uuid]);
+  }, [socket, player?.turn]);
 
   return (
     <Container highlight={turnHighlight} out={player !== null && player.isOut}>
