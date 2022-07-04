@@ -151,7 +151,7 @@ const RoomGeneratorModal = ({ onGenerate, onClose }: RoomGeneratorProps) => {
                 ? `컨텐츠, 쿠키 등의 기본 키워드가 주어집니다.\n총 200개 이상의 데이터`
                 : level === 2
                 ? '(추천) 펫, 보물이 추가됩니다.\n총 400개 이상의 데이터'
-                : `맵 이름이 추가됩니다.\n총 550개 이상의 데이터`}
+                : `맵 이름이 추가됩니다.\n총 600개 이상의 데이터`}
             </Description>
           </Form>
           <ButtonsContainer>

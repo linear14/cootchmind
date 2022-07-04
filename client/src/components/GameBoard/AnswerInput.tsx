@@ -39,9 +39,9 @@ const AnswerInput = () => {
 
       if (state && roomId && myTurn && message) {
         if (state === 'play') {
-          socket.emit('submitAnswer', { myTurn, roomId, message });
+          socket.emit('submitAnswer', { turn: myTurn, roomId, message });
         } else {
-          socket.emit('chatInGame', { myTurn, roomId, message });
+          socket.emit('chatInGame', { turn: myTurn, roomId, message });
         }
       }
     },

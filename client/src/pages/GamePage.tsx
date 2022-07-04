@@ -58,7 +58,6 @@ const GamePage = () => {
    * 페이지 접근 시 url로 들어오는 경우 이전 페이지로 튕기도록 설정
    **/
   useEffect(() => {
-    console.log('GamePage #useEffect check correct access');
     if (!name) {
       navigate('/', { replace: true });
       return;
@@ -79,7 +78,6 @@ const GamePage = () => {
 
   // [이벤트 등록] 방에 성공적으로 입장했을 경우 발생하는 이벤트
   useEffect(() => {
-    console.log('GamePage #useEffect listen onRoomEntered');
     if (socket) {
       socket.on('onRoomEntered', (room: Room, myTurn: number) => {
         const roomDataImmutable = {
@@ -106,7 +104,6 @@ const GamePage = () => {
 
   // [이벤트 등록] 플레이어 변동이 있을 경우에 발생하는 이벤트
   useEffect(() => {
-    console.log('GamePage #useEffect listen onPlayerRefreshed');
     if (socket) {
       socket.on('onPlayerRefreshed', (players: (Player | null)[]) => {
         setPlayerList(players);
@@ -119,7 +116,6 @@ const GamePage = () => {
 
   // [이벤트 등록] 새로운 게임이 시작 되었을 때 발생하는 이벤트
   useEffect(() => {
-    console.log('GamePage #useEffect listen onGameStarted');
     if (socket) {
       // 요거 currentRound랑 turn은 받을 필요 없는데 억지로 받고있음..
       // (prev로 받을 수 있도록 처리하고 서버에서도 데이터 전달하지 않도록 수정하자)
@@ -136,7 +132,6 @@ const GamePage = () => {
 
   // [이벤트 등록] 새로운 라운드가 준비 되었을 때 발생하는 이벤트
   useEffect(() => {
-    console.log('GamePage #useEffect listen onRoundReady');
     if (socket) {
       socket.on('onRoundReady', ({ state, currentRound, turn, answer }) => {
         setGameState({
@@ -155,7 +150,6 @@ const GamePage = () => {
 
   // [이벤트 등록] 새로운 라운드가 시작 되었을 때 발생하는 이벤트
   useEffect(() => {
-    console.log('GamePage #useEffect listen onRoundStarted');
     if (socket) {
       socket.on('onRoundStarted', ({ state, currentRound, turn }) => {
         setGameState({

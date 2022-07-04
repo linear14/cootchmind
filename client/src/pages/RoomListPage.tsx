@@ -116,7 +116,6 @@ const RoomListPage = () => {
   );
 
   const moveToLoginPage = useCallback(() => {
-    console.log('RoomListPage #moveToLoginPage');
     resetLocalStorageUser();
     setName(undefined);
     navigate('/login');

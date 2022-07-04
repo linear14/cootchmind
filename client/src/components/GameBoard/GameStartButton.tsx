@@ -35,7 +35,6 @@ const GameStartButton = () => {
   }, [socket, roomId]);
 
   const isGameAvailable = useCallback(() => {
-    console.log('GameStartButton #isGameAvailable');
     if (!roomId || !state) return false;
     return (
       state === 'ready' &&
